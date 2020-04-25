@@ -31,20 +31,22 @@ namespace ByondLang{
     }
     
     class Listener{
+        public static Queue<Tuple<string, Variable.Var>> subspace_messages = new Queue<Tuple<string, Variable.Var>>();
         TcpListener server;
         public static Dictionary<int, Program> programs = new Dictionary<int, Program>();
+        Random idRNG = new Random();
 
         public int NextFreeProgram(){
-            int i=0;
+            int i=idRNG.Next();
             while(programs.ContainsKey(i))
-                i++;
+                i=idRNG.Next();
             return i;
         }
 
-        public Listener(int port){
-            server = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
+        public Listener(string hostname, int port){
+            server = new TcpListener(IPAddress.Parse(hostname), port);
             server.Start();
-            Console.WriteLine("Running successfully on port {0}", port);
+            Console.WriteLine("Running successfully on {0}:{1}", hostname, port);
 
             Regex getRequest = new Regex("GET\\s+(.*?)\\s+");
 
@@ -54,11 +56,15 @@ namespace ByondLang{
             while(true){
                 Console.WriteLine("Awaiting Connection...");
                 TcpClient client = server.AcceptTcpClient();
+
+                try{
                 Console.WriteLine("Connected!");
                 
                 data = "";
 
                 NetworkStream stream = client.GetStream();
+                stream.ReadTimeout = 1000;
+                stream.WriteTimeout = 1000;
 
                 string response = @"HTTP/1.0 200 OK
 Server: NTSL2Daemon 1.0
@@ -77,6 +83,7 @@ Content-Type: text/html
                             switch(req["action"]){
                                 case "clear":
                                     programs.Clear();
+                                    subspace_messages.Clear();
                                     response += "1";
                                     break;
                                 case "new_program":
@@ -170,6 +177,49 @@ Content-Type: text/html
                                         response += "0";
                                     }
                                     break;
+                                case "subspace_receive":
+                                    string hook = (string)(Variable.VarString)req["channel"];
+                                    foreach(KeyValuePair<int, Program> kv in Listener.programs){
+                                        var their_net = kv.Value.scope.globals.meta.string_vars["_parent"].string_vars["net"].string_vars;
+                                        if(their_net["connections"].string_vars.ContainsKey(hook)){
+                                            Variable.VarList args = new Variable.VarList();
+                                            Variable.Var bc_dat = Variable.Var.nil;
+                                            if(req["type"] == "text")
+                                                bc_dat = new Variable.VarString(req["data"]);
+                                            else if(req["type"] == "num")
+                                                bc_dat = new Variable.VarNumber(Double.Parse(req["data"]));
+                                            else{
+                                                bc_dat = new Variable.VarList();
+                                                (bc_dat as Variable.VarList).privateVariables["subspace_ref"] = req["data"];
+                                            }
+                                            args.number_vars[0] = bc_dat;
+                                            args.string_vars["message"] = bc_dat;
+                                            their_net["connections"].string_vars[hook].Call(kv.Value.scope, new Dictionary<int, Variable.Var>(), 0, args);
+                                        }
+                                    }
+                                    break;
+                                case "subspace_transmit":
+                                    if(subspace_messages.Count == 0)
+                                        response += "0";
+                                    else while(subspace_messages.Count>0){
+                                        Tuple<string, Variable.Var> message = subspace_messages.Dequeue();
+                                        string channel = message.Item1;
+                                        string varType = "none";
+                                        string convertedData = "0";
+                                        Variable.Var contents = message.Item2;
+                                        if(contents is Variable.VarString){
+                                            varType = "text";
+                                            convertedData = (contents as Variable.VarString).data;
+                                        }else if(contents is Variable.VarNumber){
+                                            varType = "num";
+                                            convertedData = (contents as Variable.VarNumber).data.ToString();
+                                        }else if(contents is Variable.VarList l && l.privateVariables.ContainsKey("subspace_ref")){
+                                            varType = "ref";
+                                            convertedData = ((contents as Variable.VarList).privateVariables["subspace_ref"] as Variable.VarString).data;
+                                        }
+                                        response += "channel=" + HttpUtility.UrlEncode(message.Item1) + "&type=" + varType + "&data=" + HttpUtility.UrlEncode(convertedData) + "\n";
+                                    }
+                                    break;
                                 case "topic":
                                     id = programs.Count;
                                     if(req["id"]!=null)
@@ -197,6 +247,13 @@ Content-Type: text/html
                 }
 
                 client.Close();
+                }catch(Exception ex){
+                    Console.WriteLine("An exception occured while handling the message.");
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine("Request Header Received:");
+                    Console.WriteLine(data);
+                    client.Close();
+                }
                 Console.WriteLine("And finished!");
 
             }
