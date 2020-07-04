@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>NTSL3 online interface.</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <style>
+
+        #consolebuffer, #output {
+            white-space: pre-wrap;
+            font-family: Consolas, monaco, monospace;
+        }
+
+        #source {
+            width: 100%;
+            height: 25em;
+        }
+    </style>
+
+
+    <script>var programId = null;
+
+		function console_log(o) {
+			if(typeof o != "string")
+				o = JSON.stringify(o)
+			$("#output").append(`[${Date()}] ${o}\r\n`)
+		}
+
+		function create_program() {
+			if(programId != null)
+				return;
+			$.ajax({
+				type: "GET",
+				url: "/new_program",
+				data: {
+					code: editor.getValue()
+                },
+				success: (data) => {
+                    console_log("Program id: " + data)
+					programId = data
+				}
+			})
+		}
+
+		function exec_program() {
+			if(programId == null)
+				return;
+			$.ajax({
+				type: "GET",
+                url: `/execute`,
+				data: {
+					id: programId,
+                    cycles: 1000
+				},
+				success: (data) => {
+					$("#version").text("Execution result:" + data)
+					console_log(data)
+				}
+			})
+		}
+
+        function get_buffer() {
+            if (programId == null)
+				return;
+            $.ajax({
+                type: "GET",
+                url: `/get_buffer`,
+                data: {
+                    id: programId
+                },
+                success: (data) => {
+                    $("#consolebuffer").html(data)
+                }
+            })
+		}
+
+        function get_signal() {
+            if (programId == null)
+                return;
+            $.ajax({
+                type: "GET",
+                url: `/get_signal`,
+                data: {
+                    id: programId
+                },
+                success: (data) => {
+                    console_log(data)
+                }
+            })
+        }
+
+		function reset_program() {
+			if(programId == null)
+				return;
+			$.ajax({
+                type: "GET",
+				url: `/remove`,
+				data: {
+                    id: programId
+                },
+				success: (data) => {
+					$("#version").text(data)
+					$("#consolebuffer").text("")
+					$("#output").text("")
+					programId = null;
+				}
+			})
+		}</script>
+</head>
+<body>
+	<button onClick="create_program()">Create new program</button>
+	<button onClick="exec_program()">Execute</button>
+	<button onClick="get_buffer()">Get buffer</button>
+	<button onClick="get_signal()">Get signal</button>
+	<button onClick="reset_program()">Delete program</button>
+	<hr>
+	<h4 id="version"></h4>
+	<div id="source">
+		Console.Log("Testing")
+		if(5 * 3)
+		Console.Log(2^8)
+	</div>
+	<hr>
+	<div id="consolebuffer"></div>
+	<hr>
+	<div id="output"></div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ace.min.js" integrity="sha256-qCCcAHv/Z0u7K344shsZKUF2NR+59ooA3XWRj0LPGIQ=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/mode-javascript.min.js" integrity="sha256-cN39Ofb0/L/HOBScgDuoNefcVF4+MKdAsxXR3g/xyZw=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/theme-monokai.min.js" integrity="sha256-QjbDa92d4Q3oBUXnKXRhOrz8eONu3odsIlDHnNwg4y4=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ext-language_tools.min.js" integrity="sha256-KFXf4u8zJlXEUJckmmZbITzYENXMuqPqyrlscCKeqFU=" crossorigin="anonymous"></script>
+	<script>
+		ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/");
+		ace.require("ace/ext/language_tools");
+		window.editor = ace.edit("source");
+		editor.setOptions({
+			enableBasicAutocompletion: true
+		});
+		editor.setTheme("ace/theme/monokai");
+		editor.session.setMode("ace/mode/javascript");</script>
+</body>
+</html>

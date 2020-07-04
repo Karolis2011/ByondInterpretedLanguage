@@ -12,8 +12,8 @@ namespace ByondLang.Services
 {
     public class NTSLService
     {
-        private Dictionary<int, Language.Program> programs = new Dictionary<int, Language.Program>();
-        private Queue<Tuple<string, Language.Variable.Var>> subspace_messages = new Queue<Tuple<string, Language.Variable.Var>>();
+        private readonly Dictionary<int, Language.Program> programs = new Dictionary<int, Language.Program>();
+        private readonly Queue<Tuple<string, Language.Variable.Var>> subspace_messages = new Queue<Tuple<string, Language.Variable.Var>>();
         private int lastId = 1;
 
 
@@ -139,7 +139,7 @@ namespace ByondLang.Services
                 if (their_net["connections"].string_vars.ContainsKey(hook))
                 {
                     VarList args = new VarList();
-                    Var bc_dat = Var.nil;
+                    Var bc_dat;
                     if (type == "text")
                         bc_dat = new VarString(data);
                     else if (type == "num")
