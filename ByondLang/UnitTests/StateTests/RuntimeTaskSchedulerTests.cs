@@ -35,12 +35,32 @@ namespace ByondLang.UnitTests.StateTests
             Assert.False(task1.IsCompleted);
             Assert.False(flag2);
             Assert.False(task2.IsCompleted);
-            task2.Wait();
+            Assert.True(task2.Wait(500));
             Thread.Sleep(10);
             Assert.True(flag1);
             Assert.True(task1.IsCompleted);
             Assert.True(flag2);
             Assert.True(task2.IsCompleted);
+            s.Dispose();
+        }
+
+        [Fact]
+        public void ProperPriority()
+        {
+            var s = new RuntimeTaskScheduler();
+            var factory = new TaskFactory(s);
+            bool flag1 = false;
+            bool flag2 = false;
+            bool flag3 = false;
+            var task1 = factory.StartNew(() => { Thread.Sleep(20); flag1 = true; });
+            var task2 = factory.StartNew(() => { Thread.Sleep(20); flag2 = true; });
+            var task3 = factory.StartNew(() => { Thread.Sleep(20); flag3 = true; });
+            s.PrioritizeTask(task3);
+            Assert.True(task3.Wait(500));
+            Assert.True(flag3); // We expect task3 to be finished as we asked
+            Assert.True(flag1); // task1 probably has already started execution, so we also expect it to be finished
+            Assert.False(flag2); // And we expect task2 to not have finished yeat.
+
         }
     }
 }

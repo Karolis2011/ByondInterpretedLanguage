@@ -8,13 +8,14 @@ namespace ByondLang.ChakraCore.Reflection
     [AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
     sealed class JsCallableAttribute : Attribute
     {
-
+        public JsCallableAttribute()
+        {
+        }
         public JsCallableAttribute(string functionName)
         {
             FunctionName = functionName;
         }
 
-        // This is a named argument
-        public string FunctionName { get; set; }
+        public string FunctionName { get; set; } = null;
     }
 }

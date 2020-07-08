@@ -184,12 +184,404 @@ namespace ByondLang.ChakraCore
 		{
 			var del = obj as Delegate;
 			var delArray = obj as Delegate[];
-			if(delArray != null)
+			if (delArray != null)
 				return CreateEmbeddedFunction(delArray);
-			if(del != null)
-				return CreateEmbeddedFunction(new[] { del });
+			else if (del != null)
+				return CreateEmbeddedFunction(del);
+			else
+				return CreateEmbeddedObject(obj);
 
-			throw new NotImplementedException("Full object automatic mapping is not implemented.");
+		}
+
+		private EmbeddedObject CreateEmbeddedObject(object obj)
+		{
+			GCHandle objHandle = GCHandle.Alloc(obj);
+			IntPtr objPtr = GCHandle.ToIntPtr(objHandle);
+			JsValue objValue = JsValue.CreateExternalObject(objPtr, _embeddedObjectFinalizeCallback);
+
+			var embeddedObject = new EmbeddedObject(obj, objValue);
+			var embeddingOptions = GetEmbeddingObjectOptions(obj);
+
+			ProjectFields(embeddedObject, embeddingOptions);
+			ProjectProperties(embeddedObject, embeddingOptions);
+			ProjectMethods(embeddedObject, embeddingOptions);
+			if(embeddingOptions.Freeze)
+				FreezeObject(objValue);
+
+			return embeddedObject;
+		}
+
+		private void ProjectFields(EmbeddedItem externalItem, EmbeddingObjectOptions options)
+		{
+			Type type = externalItem.HostType;
+			object obj = externalItem.HostObject;
+			JsValue typeValue = externalItem.ScriptValue;
+			bool instance = externalItem.IsInstance;
+			IList<JsNativeFunction> nativeFunctions = externalItem.NativeFunctions;
+
+			string typeName = type.FullName;
+			BindingFlags defaultBindingFlags = ReflectionHelpers.GetDefaultBindingFlags(instance);
+			FieldInfo[] fields = type.GetFields(defaultBindingFlags).Where(options.IsMapped).ToArray();
+
+			foreach (FieldInfo field in fields)
+			{
+				string fieldName = field.Name;
+
+				JsValue descriptorValue = JsValue.CreateObject();
+				descriptorValue.SetProperty("enumerable", JsValue.True, true);
+
+				JsNativeFunction nativeGetFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+				{
+					if (instance && obj == null)
+					{
+						CreateAndSetError($"Context error while invoking getter '{fieldName}'.");
+						return JsValue.Undefined; ;
+					}
+					object result;
+
+					try
+					{
+						result = field.GetValue(obj);
+					}
+					catch (Exception e)
+					{
+						Exception exception = UnwrapException(e);
+						var wrapperException = exception as JsException;
+						JsValue errorValue;
+
+						if (wrapperException != null)
+						{
+							errorValue = CreateErrorFromWrapperException(wrapperException);
+						}
+						else
+						{
+							string errorMessage = instance ?
+								$"Error ocured while reading field '{fieldName}': {exception.Message}"
+								:
+								$"Erorr ocured while reading static field '{fieldName}' from type '{typeName}': {exception.Message}"
+								;
+							errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+						}
+						JsContext.SetException(errorValue);
+
+						return JsValue.Undefined;
+					}
+
+					JsValue resultValue = MapToScriptType(result);
+
+					return resultValue;
+				};
+				nativeFunctions.Add(nativeGetFunction);
+
+				JsValue getMethodValue = JsValue.CreateFunction(nativeGetFunction);
+				descriptorValue.SetProperty("get", getMethodValue, true);
+
+				JsNativeFunction nativeSetFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+				{
+					if (instance && obj == null)
+					{
+						CreateAndSetError($"Invalid context got host object field {fieldName}.");
+						return JsValue.Undefined;
+					}
+
+					object value = MapToHostType(args[1]);
+					ReflectionHelpers.FixFieldValueType(ref value, field);
+
+					try
+					{
+						field.SetValue(obj, value);
+					}
+					catch (Exception e)
+					{
+						Exception exception = UnwrapException(e);
+						var wrapperException = exception as JsException;
+						JsValue errorValue;
+
+						if (wrapperException != null)
+						{
+							errorValue = CreateErrorFromWrapperException(wrapperException);
+						}
+						else
+						{
+							string errorMessage = instance ?
+								$"Failed to set value for hosts object field '{fieldName}': {exception.Message}"
+								:
+								$"Failed to set value for static type '{typeName}' field '{fieldName}': {exception.Message}"
+								;
+							errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+						}
+						JsContext.SetException(errorValue);
+
+						return JsValue.Undefined;
+					}
+
+					return JsValue.Undefined;
+				};
+				nativeFunctions.Add(nativeSetFunction);
+
+				JsValue setMethodValue = JsValue.CreateFunction(nativeSetFunction);
+				descriptorValue.SetProperty("set", setMethodValue, true);
+
+				typeValue.DefineProperty(fieldName, descriptorValue);
+			}
+		}
+
+		private void ProjectProperties(EmbeddedItem externalItem, EmbeddingObjectOptions options)
+		{
+			Type type = externalItem.HostType;
+			object obj = externalItem.HostObject;
+			JsValue typeValue = externalItem.ScriptValue;
+			IList<JsNativeFunction> nativeFunctions = externalItem.NativeFunctions;
+			bool instance = externalItem.IsInstance;
+
+			string typeName = type.FullName;
+			BindingFlags defaultBindingFlags = ReflectionHelpers.GetDefaultBindingFlags(instance);
+			PropertyInfo[] properties = type.GetProperties(defaultBindingFlags).Where(options.IsMapped).ToArray();
+
+			foreach (PropertyInfo property in properties)
+			{
+				string propertyName = property.Name;
+
+				JsValue descriptorValue = JsValue.CreateObject();
+				descriptorValue.SetProperty("enumerable", JsValue.True, true);
+
+				if (property.GetGetMethod() != null)
+				{
+					JsNativeFunction nativeGetFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+					{
+						if (instance && obj == null)
+						{
+							CreateAndSetError($"Invalid context for '{propertyName}' property.");
+							return JsValue.Undefined;
+						}
+
+						object result;
+
+						try
+						{
+							result = property.GetValue(obj, new object[0]);
+						}
+						catch (Exception e)
+						{
+							Exception exception = UnwrapException(e);
+							var wrapperException = exception as JsException;
+							JsValue errorValue;
+
+							if (wrapperException != null)
+							{
+								errorValue = CreateErrorFromWrapperException(wrapperException);
+							}
+							else
+							{
+								string errorMessage = instance ?
+									$"Property '{propertyName}' get operation failed: {exception.Message}"
+									:
+									$"Property '{propertyName}' of static type '{typeName}' get operation failed: {exception.Message}"
+									;
+								errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+							}
+							JsContext.SetException(errorValue);
+
+							return JsValue.Undefined;
+						}
+
+						JsValue resultValue = MapToScriptType(result);
+
+						return resultValue;
+					};
+					nativeFunctions.Add(nativeGetFunction);
+
+					JsValue getMethodValue = JsValue.CreateFunction(nativeGetFunction);
+					descriptorValue.SetProperty("get", getMethodValue, true);
+				}
+
+				if (property.GetSetMethod() != null)
+				{
+					JsNativeFunction nativeSetFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+					{
+						JsValue undefinedValue = JsValue.Undefined;
+
+						if (instance && obj == null)
+						{
+							CreateAndSetError($"Invalid context for '{propertyName}' property.");
+							return undefinedValue;
+						}
+
+						object value = MapToHostType(args[1]);
+						ReflectionHelpers.FixPropertyValueType(ref value, property);
+
+						try
+						{
+							property.SetValue(obj, value, new object[0]);
+						}
+						catch (Exception e)
+						{
+							Exception exception = UnwrapException(e);
+							var wrapperException = exception as JsException;
+							JsValue errorValue;
+
+							if (wrapperException != null)
+							{
+								errorValue = CreateErrorFromWrapperException(wrapperException);
+							}
+							else
+							{
+								string errorMessage = instance ?
+									$"Host object property '{propertyName}' setting failed: {exception.Message}"
+									:
+									$"Host type '{typeName}' property '{propertyName}' setting failed: {exception.Message}"
+									;
+								errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+							}
+							JsContext.SetException(errorValue);
+
+							return undefinedValue;
+						}
+
+						return undefinedValue;
+					};
+					nativeFunctions.Add(nativeSetFunction);
+
+					JsValue setMethodValue = JsValue.CreateFunction(nativeSetFunction);
+					descriptorValue.SetProperty("set", setMethodValue, true);
+				}
+
+				typeValue.DefineProperty(propertyName, descriptorValue);
+			}
+		}
+
+		private void ProjectMethods(EmbeddedItem externalItem, EmbeddingObjectOptions options)
+		{
+			Type type = externalItem.HostType;
+			object obj = externalItem.HostObject;
+			JsValue typeValue = externalItem.ScriptValue;
+			IList<JsNativeFunction> nativeFunctions = externalItem.NativeFunctions;
+			bool instance = externalItem.IsInstance;
+
+			string typeName = type.FullName;
+			BindingFlags defaultBindingFlags = ReflectionHelpers.GetDefaultBindingFlags(instance);
+			var methods = type.GetMethods(defaultBindingFlags).Select(options.ExtendInfo)
+				.Where((m) => m.IsMapped);
+			var methodGroups = methods.GroupBy(m => m.Name);
+
+			foreach (var methodGroup in methodGroups)
+			{
+				string methodName = methodGroup.Key;
+				MethodInfo[] methodCandidates = methodGroup.Select(m => m.Info).ToArray();
+
+				JsNativeFunction nativeFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+				{
+					if (instance && obj == null)
+					{
+						CreateAndSetError($"Invalid context while calling method '{methodName}'.");
+						return JsValue.Undefined;
+					}
+
+					if(!SelectAndProcessFunction(methodCandidates, args, argCount, out MethodInfo bestSelection, out object[] processedArgs))
+					{
+						CreateAndSetError($"Suitable method '{methodName}' was not found.");
+						return JsValue.Undefined;
+					}
+
+					object result;
+
+					try
+					{
+						result = bestSelection.Invoke(obj, processedArgs);
+					}
+					catch (Exception e)
+					{
+						Exception exception = UnwrapException(e);
+						var wrapperException = exception as JsException;
+						JsValue errorValue;
+
+						if (wrapperException != null)
+						{
+							errorValue = CreateErrorFromWrapperException(wrapperException);
+						}
+						else
+						{
+							string errorMessage = instance ?
+								$"Host method '{methodName}' invocation error: {exception.Message}"
+								:
+								$"Host static type '{typeName}' method '{methodName}' invocation error: {exception.Message}"
+								;
+							errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+						}
+						JsContext.SetException(errorValue);
+
+						return JsValue.Undefined;
+					}
+
+					JsValue resultValue = MapToScriptType(result);
+
+					return resultValue;
+				};
+				nativeFunctions.Add(nativeFunction);
+
+				JsValue methodValue = JsValue.CreateNamedFunction(methodName, nativeFunction);
+				typeValue.SetProperty(methodName, methodValue, true);
+			}
+		}
+
+		private EmbeddingObjectOptions GetEmbeddingObjectOptions(object obj)
+		{
+			return new EmbeddingObjectOptions(obj.GetType());
+		}
+
+		private EmbeddedObject CreateEmbeddedFunction(Delegate del)
+		{
+			JsNativeFunction nativeFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+			{
+				var methodInfo = del.GetMethodInfo();
+				var parameters = methodInfo.GetParameters();
+				
+				if (!IsCompatibleSignature(args.Select(v => v.ValueType).ToArray(), parameters, out ParameterType[] prameterTypes))
+				{
+					CreateAndSetError($"Method signature is incompatible with passed arguments.");
+				}
+				if (!ProcessFunction(parameters, prameterTypes, args, argCount, out object[] processedArgs))
+				{
+					CreateAndSetError($"Failed to process arguments.");
+				}
+
+				object result;
+
+				try
+				{
+					result = del.DynamicInvoke(processedArgs);
+				}
+				catch (Exception e)
+				{
+					JsValue undefinedValue = JsValue.Undefined;
+					Exception exception = UnwrapException(e);
+					var wrapperException = exception as JsException;
+					JsValue errorValue = wrapperException != null ?
+						CreateErrorFromWrapperException(wrapperException)
+						:
+						JsValue.CreateError(JsValue.FromString($"Host delegate invocation error: {exception.Message}"));
+					;
+					JsContext.SetException(errorValue);
+
+					return undefinedValue;
+				}
+
+				JsValue resultValue = MapToScriptType(result);
+
+				return resultValue;
+			};
+
+			GCHandle delHandle = GCHandle.Alloc(del);
+			IntPtr delPtr = GCHandle.ToIntPtr(delHandle);
+			JsValue objValue = JsValue.CreateExternalObject(delPtr, _embeddedObjectFinalizeCallback);
+
+			JsValue functionValue = JsValue.CreateFunction(nativeFunction);
+			SetNonEnumerableProperty(functionValue, ExternalObjectPropertyName, objValue);
+
+			var embeddedObject = new EmbeddedObject(del, functionValue,
+				new List<JsNativeFunction> { nativeFunction });
+
+			return embeddedObject;
 		}
 
 		private EmbeddedObject CreateEmbeddedFunction(Delegate[] del)
@@ -256,11 +648,34 @@ namespace ByondLang.ChakraCore
 				return false;
 
 			selection = candidite.del;
-			processedArgs = new object[candidite.paramInfo.Length];
+			return ProcessFunction(candidite.paramInfo, candidite.types, args, argscount, out processedArgs);
+		}
+
+		private bool SelectAndProcessFunction(MethodInfo[] funs, JsValue[] args, ushort argscount, out MethodInfo selection, out object[] processedArgs)
+		{
+			selection = null;
+			processedArgs = null;
+			var argTypes = args.Select(v => v.ValueType).ToArray();
+			var candidite = funs.Select(mi =>
+			{
+				var pi = mi.GetParameters();
+				var isc = IsCompatibleSignature(argTypes, pi, out ParameterType[] pt);
+				return new { methodInfo = mi, compatible = isc, types = pt, paramInfo = pi };
+			}).Where(d => d.compatible).OrderByDescending(d => d.types.Length).FirstOrDefault();
+			if (candidite == null)
+				return false;
+
+			selection = candidite.methodInfo;
+			return ProcessFunction(candidite.paramInfo, candidite.types, args, argscount, out processedArgs);
+		}
+
+		private bool ProcessFunction(ParameterInfo[] parameterInfos, ParameterType[] parameterTypes, JsValue[] args,  ushort argscount, out object[] processedArgs)
+		{
+			processedArgs = new object[parameterInfos.Length];
 			int aPos = 1;
 			for (int i = 0; i < processedArgs.Length; i++)
 			{
-				var pt = candidite.types[i];
+				var pt = parameterTypes[i];
 				switch (pt)
 				{
 					case ParameterType.Direct:
@@ -268,7 +683,7 @@ namespace ByondLang.ChakraCore
 						aPos++;
 						break;
 					case ParameterType.InjectMeta:
-						var pi = candidite.paramInfo[i];
+						var pi = parameterInfos[i];
 						if (pi.ParameterType == typeof(JsRuntime))
 							processedArgs[i] = JsContext.Current.Runtime;
 						else if (pi.ParameterType == typeof(JsContext))
@@ -278,9 +693,9 @@ namespace ByondLang.ChakraCore
 						break;
 					case ParameterType.Convert:
 						processedArgs[i] = MapToHostType(args[aPos]);
-						Type targetType = candidite.paramInfo[i].ParameterType;
+						Type targetType = parameterInfos[i].ParameterType;
 						Type currentType = processedArgs[i].GetType();
-						if(targetType != currentType)
+						if (targetType != currentType)
 						{
 							if (TypeConverter.TryConvertToType(processedArgs[i], targetType, out object convertedValue))
 							{
@@ -343,12 +758,11 @@ namespace ByondLang.ChakraCore
 						continue;
 					}
 				}
-				TypeCode typeCode = Type.GetTypeCode(param.ParameterType);
+				// We ran out of arguments
+				if (args.Length <= argPos && !param.IsOptional)
+					return false;
 				if (AreTypesCompatible(args[argPos], param.ParameterType))
 				{
-					// We ran out of arguments
-					if (args.Length <= argPos && !param.IsOptional)
-						return false;
 					parameterTypes[i] = ParameterType.Convert;
 					argPos++;
 				} else
@@ -505,6 +919,15 @@ namespace ByondLang.ChakraCore
 			errorValue.SetProperty("innerException", innerErrorValue, true);
 
 			return errorValue;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void FreezeObject(JsValue objValue)
+		{
+			JsValue freezeMethodValue = JsValue.GlobalObject
+				.GetProperty("Object")
+				.GetProperty("freeze");
+			freezeMethodValue.CallFunction(objValue);
 		}
 
 		private void EmbeddedObjectFinalizeCallback(IntPtr ptr)

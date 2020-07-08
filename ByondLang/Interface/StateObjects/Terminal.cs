@@ -10,52 +10,40 @@ using System.Web;
 
 namespace ByondLang.Interface.StateObjects
 {
+    [JsObject]
     public class Terminal
     {
-        public int cursor_x = 0;
-        public int cursor_y = 0;
-        public int width = 64;
-        public int height = 20;
+        [JsMapped]
+        public int cursorX { get; set; } = 0;
+        [JsMapped]
+        public int cursorY { get; set; } = 0;
+        [JsMapped]
+        public int width { get; private set; } = 64;
+        [JsMapped]
+        public int height { get; private set; } = 20;
         string computer_ref;
         TerminalChar[][] char_array;
 
         public Color background = new Color(0, 0, 0);
         public Color foreground = new Color(255, 255, 255);
 
-        public Terminal(int width, int height, string computer_ref)
+        private BaseProgram context;
+
+        public Terminal(int width, int height, string computer_ref, BaseProgram context)
         {
             this.computer_ref = computer_ref;
             this.width = width;
             this.height = height;
-            Clear();
+            this.context = context;
+            clear();
         }
 
-        public JsValue GetRepresentation(ChakraCore.TypeMapper tm)
-        {
-            var term = JsValue.CreateObject();
-            term.SetProperty("set_foreground", tm.MTS((Action<float, float, float>)SetForeground), true);
-            term.SetProperty("get_foreground", tm.MTS((Func<ChakraCore.TypeMapper, JsValue>)GetForeground), true);
-            term.SetProperty("set_background", tm.MTS((Action<float, float, float>)SetForeground), true);
-            term.SetProperty("get_background", tm.MTS((Func<ChakraCore.TypeMapper, JsValue>)GetForeground), true);
-            term.SetProperty("set_cursor", tm.MTS((Action<int, int>)SetCursor), true);
-            term.SetProperty("set_cursor_x", tm.MTS((Action<int>)SetCursorX), true);
-            term.SetProperty("set_cursor_y", tm.MTS((Action<int>)SetCursorY), true);
-            term.SetProperty("get_cursor", tm.MTS((Func<ChakraCore.TypeMapper, JsValue>)GetCursor), true);
-            term.SetProperty("get_cursor_x", tm.MTS((Func<int>)GetCursorX), true);
-            term.SetProperty("get_cursor_y", tm.MTS((Func<int>)GetCursorY), true);
-            term.SetProperty("clear", tm.MTS((Action)Clear), true);
-            term.SetProperty("write", tm.MTS((Action<string>)Write), true);
-            term.SetProperty("get_size", tm.MTS((Func<ChakraCore.TypeMapper, JsValue>)GetSize), true);
-            term.SetProperty("get_width", tm.MTS((Func<int>)GetWidth), true);
-            term.SetProperty("get_height", tm.MTS((Func<int>)GetHeight), true);
-            term.SetProperty("set_topic", tm.MTS((Action<int, int, int, int, string>)SetTopic), true);
-            return term;
-        }
+        public Terminal(string computer_ref, BaseProgram context) : this(64, 20, computer_ref, context) { }
 
-        // set_foreground
-        public void SetForeground(float r, float g, float b) => foreground = new Color(r, g, b);
-        // get_foreground
-        public JsValue GetForeground(ChakraCore.TypeMapper tm)
+        [JsCallable]
+        public void setForeground(float r, float g, float b) => foreground = new Color(r, g, b);
+        [JsCallable]
+        public JsValue getForeground(TypeMapper tm)
         {
             var array = JsValue.CreateArray(3);
             array.SetIndexedProperty(0, tm.MTS(foreground.r));
@@ -63,10 +51,10 @@ namespace ByondLang.Interface.StateObjects
             array.SetIndexedProperty(2, tm.MTS(foreground.b));
             return array;
         }
-        // set_background
-        public void SetBackground(float r, float g, float b) => background = new Color(r, g, b);
-        // get_foreground
-        public JsValue GetBackground(ChakraCore.TypeMapper tm)
+        [JsCallable]
+        public void setBackground(float r, float g, float b) => background = new Color(r, g, b);
+        [JsCallable]
+        public JsValue getBackground(TypeMapper tm)
         {
             var array = JsValue.CreateArray(3);
             array.SetIndexedProperty(0, tm.MTS(background.r));
@@ -74,33 +62,25 @@ namespace ByondLang.Interface.StateObjects
             array.SetIndexedProperty(2, tm.MTS(background.b));
             return array;
         }
-        // set_cursor
-        public void SetCursor(int x, int y)
+        [JsCallable]
+        public void setCursor(int x, int y)
         {
-            cursor_x = x;
-            cursor_y = y;
+            cursorX = x;
+            cursorY = y;
         }
-        // set_cursor_x
-        public void SetCursorX(int x) => cursor_x = x;
-        // set_cursor_y
-        public void SetCursorY(int y) => cursor_y = y;
-        // get_cursor
-        public JsValue GetCursor(ChakraCore.TypeMapper tm)
+        [JsCallable]
+        public JsValue getCursor(TypeMapper tm)
         {
             var array = JsValue.CreateArray(2);
-            array.SetIndexedProperty(0, tm.MTS(cursor_x));
-            array.SetIndexedProperty(1, tm.MTS(cursor_y));
+            array.SetIndexedProperty(0, tm.MTS(cursorX));
+            array.SetIndexedProperty(1, tm.MTS(cursorY));
             return array;
         }
-        // get_cursor_x
-        public int GetCursorX() => cursor_x;
-        // get_cursor_y
-        public int GetCursorY() => cursor_y;
-        // clear
-        public void Clear()
+        [JsCallable]
+        public void clear()
         {
-            cursor_x = 0;
-            cursor_y = 0;
+            cursorX = 0;
+            cursorY = 0;
             char_array = new TerminalChar[height][];
             for (int y = 0; y < height; y++)
             {
@@ -111,47 +91,66 @@ namespace ByondLang.Interface.StateObjects
                 }
             }
         }
-        // write
-        public void Write(string str)
+        [JsCallable]
+        public void write(JsValue val)
+        {
+            if (val.ValueType != JsValueType.String)
+                write(val.ConvertToString().ToString());
+            else
+                write(val.ToString());
+        }
+
+        [JsCallable]
+        public void print(JsValue val)
+        {
+            write(val);
+            cursorX = 0;
+            MoveDown();
+        }
+
+        public void write(string str)
         {
             foreach (char c in str)
             {
                 if (c == '\r')
                 {
-                    cursor_x = 0;
+                    cursorX = 0;
                 }
                 else if (c == '\n')
                 {
+                    cursorX = 0;
                     MoveDown();
                 }
                 else if (c == '\t')
                 {
                     MoveRight();
-                    while (cursor_x % 4 > 0)
+                    while (cursorX % 4 > 0)
                         MoveRight();
                 }
                 else
                 {
-                    char_array[cursor_y][cursor_x] = new TerminalChar(c, background, foreground, "");
+                    lock (char_array)
+                    {
+                        char_array[cursorY][cursorX] = new TerminalChar(c, background, foreground, "");
+                    }
                     MoveRight();
                 }
             }
         }
-        // get_size
-        public JsValue GetSize(ChakraCore.TypeMapper tm)
+        [JsCallable]
+        public JsValue getSize(TypeMapper tm)
         {
             var array = JsValue.CreateArray(2);
             array.SetIndexedProperty(0, tm.MTS(width));
             array.SetIndexedProperty(1, tm.MTS(height));
             return array;
         }
-        // get_width
-        public int GetWidth() => width;
-        // get_height
-        public int GetHeight() => height;
-        // set_topic
-        public void SetTopic(int x, int y, int w, int h, string topic)
+        [JsCallable]
+        public void setTopic(int x, int y, int w, int h, bool promt, JsValue callback)
         {
+            var topic = context.RegisterCallback(callback);
+            if (promt)
+                topic = "?" + topic;
             for (int X = 0; X < w; X++)
             {
                 for (int Y = 0; Y < h; Y++)
@@ -160,34 +159,51 @@ namespace ByondLang.Interface.StateObjects
                 }
             }
         }
-
-
+        [JsCallable]
+        public void setTopic(int x, int y, int w, int h, JsValue callback) => setTopic(x, y, w, h, false, callback);
 
         public string Stringify()
         {
-            string outp = "";
-            string joiner = "";
-            for (int y = 0; y < height; y++)
+            StringBuilder outp = new StringBuilder();
+            lock (char_array)
             {
-                outp += joiner;
-                joiner = "<br>";
-                for (int x = 0; x < width; x++)
+                for (int y = 0; y < height; y++)
                 {
-                    StringBuilder to_Write = new StringBuilder();
-                    TerminalChar toDraw = char_array[y][x];
-                    if (toDraw.topic != "" && !(x > 0 && toDraw.topic == char_array[y][x - 1].topic))
-                        to_Write.Append($"<a style='text-decoration:none;' href='?src={computer_ref};PRG_topic={HttpUtility.UrlEncode(toDraw.topic)}'>");
-                    if (!(x > 0 && toDraw.Like(char_array[y][x - 1])))
-                        to_Write.Append( $"<span style=\"color:{toDraw.foreground.toHTML()};background-color:{toDraw.background.toHTML()}\">");
-                    to_Write.Append(encode(toDraw.text));
-                    if (!(x < width - 1 && toDraw.Like(char_array[y][x + 1])))
-                        to_Write.Append("</span>");
-                    if (toDraw.topic != "" && !(x < width - 1 && toDraw.topic == char_array[y][x + 1].topic))
-                        to_Write.Append("</a>");
-                    outp += to_Write;
+                    if (y != 0)
+                        outp.Append("<br>");
+                    for (int x = 0; x < width; x++)
+                    {
+
+                        TerminalChar toDraw = char_array[y][x];
+
+                        // Is out color diffrent?
+                        if (x == 0 || !toDraw.Like(char_array[y][x - 1]))
+                            // We are not at start, so we close prevous color
+                            if (x != 0)
+                                outp.Append(toDraw.ColorClose());
+                        outp.Append(toDraw.ColorOpen());
+
+                        // Open topic 
+                        if (toDraw.topic != "" && (x == 0 || toDraw.topic != char_array[y][x - 1].topic))
+                        {
+                            outp.Append($"<a style='text-decoration:none;' href='?src={computer_ref};PRG_topic={HttpUtility.UrlEncode(toDraw.topic)}'>");
+                            outp.Append(toDraw.ColorOpen());
+                        }
+
+                        outp.Append(encode(toDraw.text));
+
+                        if (x == width - 1)
+                            outp.Append(toDraw.ColorClose());
+
+                        if (toDraw.topic != "" && !(x < width - 1 && toDraw.topic == char_array[y][x + 1].topic))
+                        {
+                            outp.Append("</a>");
+
+                        }
+                    }
                 }
             }
-            return outp;
+            return outp.ToString();
         }
 
         public string encode(char c)
@@ -197,24 +213,23 @@ namespace ByondLang.Interface.StateObjects
             return HttpUtility.HtmlEncode(c.ToString());
         }
 
-        public Terminal(string computer_ref) : this(64, 20, computer_ref) { }
 
         public void MoveRight()
         {
-            cursor_x++;
-            if (cursor_x >= width)
+            cursorX++;
+            if (cursorX >= width)
             {
-                cursor_x = 0;
+                cursorX = 0;
                 MoveDown();
             }
         }
 
         public void MoveDown()
         {
-            cursor_y++;
-            if (cursor_y >= height)
+            cursorY++;
+            if (cursorY >= height)
             {
-                cursor_y--;
+                cursorY--;
                 for (int i = 0; i < height - 1; i++)
                 {
                     char_array[i] = char_array[i + 1];
@@ -226,7 +241,6 @@ namespace ByondLang.Interface.StateObjects
                 }
             }
         }
-
         
 
         private void SetTopic(int x, int y, string topic)
@@ -237,9 +251,18 @@ namespace ByondLang.Interface.StateObjects
             }
         }
 
-        
+        internal void PrintException(Exception ex)
+        {
+            var lastfgcolor = foreground;
+            var lastbgcolor = background;
+            foreground = new Color(255, 0, 0);
+            background = new Color(0, 0, 0);
+            write(ex.Message);
+            write("\r\n");
+            foreground = lastfgcolor;
+            background = lastbgcolor;
+        }
 
-        
 
         class TerminalChar
         {
@@ -270,6 +293,9 @@ namespace ByondLang.Interface.StateObjects
                        foreground.g == other.foreground.g &&
                        foreground.b == other.foreground.b;
             }
+
+            internal string ColorOpen() => $"<span style=\"color:{foreground.toHTML()};background-color:{background.toHTML()}\">";
+            internal string ColorClose() => $"</span>";
         }
 
         public class Color

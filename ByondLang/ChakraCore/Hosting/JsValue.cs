@@ -329,6 +329,67 @@ namespace ByondLang.ChakraCore.Hosting
         }
 
         /// <summary>
+        ///     Creates a new JavaScript named function.
+        /// </summary>
+        /// <remarks>
+        ///     Requires an active script context.
+        /// </remarks>
+        /// <param name="name">Nane for this function</param>
+        /// <param name="function">The method to call when the function is invoked.</param>
+        /// <returns>The new function object.</returns>
+        public static JsValue CreateNamedFunction(JsValue name, JsNativeFunction function)
+        {
+            Native.ThrowIfError(Native.JsCreateNamedFunction(name, function, IntPtr.Zero, out JsValue reference));
+            return reference;
+        }
+
+        /// <summary>
+        ///     Creates a new JavaScript named function.
+        /// </summary>
+        /// <remarks>
+        ///     Requires an active script context.
+        /// </remarks>
+        /// <param name="name">Nane for this function</param>
+        /// <param name="function">The method to call when the function is invoked.</param>
+        /// <returns>The new function object.</returns>
+        public static JsValue CreateNamedFunction(string name, JsNativeFunction function)
+        {
+            return CreateNamedFunction(FromString(name), function);
+        }
+
+        /// <summary>
+        ///     Creates a new JavaScript named function.
+        /// </summary>
+        /// <remarks>
+        ///     Requires an active script context.
+        /// </remarks>
+        /// <param name="name">Nane for this function</param>
+        /// <param name="function">The method to call when the function is invoked.</param>
+        /// <param name="callbackData">Data to be provided to all function callbacks.</param>
+        /// <returns>The new function object.</returns>
+        public static JsValue CreateNamedFunction(JsValue name, JsNativeFunction function, IntPtr callbackData)
+        {
+            Native.ThrowIfError(Native.JsCreateNamedFunction(name, function, callbackData, out JsValue reference));
+            return reference;
+        }
+
+        /// <summary>
+        ///     Creates a new JavaScript named function.
+        /// </summary>
+        /// <remarks>
+        ///     Requires an active script context.
+        /// </remarks>
+        /// <param name="name">Nane for this function</param>
+        /// <param name="function">The method to call when the function is invoked.</param>
+        /// <param name="callbackData">Data to be provided to all function callbacks.</param>
+        /// <returns>The new function object.</returns>
+        public static JsValue CreateNamedFunction(string name, JsNativeFunction function, IntPtr callbackData)
+        {
+            return CreateNamedFunction(FromString(name), function, callbackData);
+        }
+
+
+        /// <summary>
         ///     Creates a JavaScript array object.
         /// </summary>
         /// <remarks>
@@ -882,6 +943,18 @@ namespace ByondLang.ChakraCore.Hosting
             }
             Native.ThrowIfError(Native.JsConstructObject(this, arguments, (ushort)arguments.Length, out JsValue returnReference));
             return returnReference;
+        }
+
+
+        public static Func<JsValue, string> JsonStringify()
+        {
+            var glob = GlobalObject;
+            var func = glob.GetProperty("JSON").GetProperty("stringify");
+            return (val) =>
+            {
+                var res = func.CallFunction(glob, val);
+                return res.ToString();
+            };
         }
     }
 }

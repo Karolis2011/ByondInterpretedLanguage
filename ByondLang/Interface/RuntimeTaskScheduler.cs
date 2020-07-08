@@ -13,9 +13,10 @@ namespace ByondLang.Interface
         private object aliveLock = new object();
         private bool alive = true;
         private LinkedList<Task> tasks = new LinkedList<Task>();
+        private LinkedList<Task> priorityTasks = new LinkedList<Task>();
         private Thread thread;
         private AutoResetEvent newTaskEvent = new AutoResetEvent(false);
-        private AutoResetEvent taskExecuted = new AutoResetEvent(false);
+        private ManualResetEvent taskExecuted = new ManualResetEvent(false);
 
         public RuntimeTaskScheduler()
         {
@@ -29,25 +30,36 @@ namespace ByondLang.Interface
             Task currentlyExecuting = null;
             while (shouldStayAlive)
             {
-                bool failed = false;
-                lock (tasks)
+                lock (priorityTasks)
                 {
-                    if(tasks.First != null)
+                    if (priorityTasks.First != null)
                     {
-                        currentlyExecuting = tasks.First.Value;
-                        tasks.RemoveFirst();
-                    } else
-                    {
-                        failed = true;
+                        currentlyExecuting = priorityTasks.First.Value;
+                        priorityTasks.RemoveFirst();
+
                     }
                 }
-                if(!failed && currentlyExecuting != null)
+                if(currentlyExecuting == null)
                 {
+                    lock (tasks)
+                    {
+                        if (tasks.First != null)
+                        {
+                            currentlyExecuting = tasks.First.Value;
+                            tasks.RemoveFirst();
+                        }
+                    }
+                }
+                
+                if(currentlyExecuting != null)
+                {
+                    taskExecuted.Reset();
                     TryExecuteTask(currentlyExecuting);
                     taskExecuted.Set();
-                }
-                if (failed && shouldStayAlive)
-                    newTaskEvent.WaitOne();
+                    currentlyExecuting = null;
+                } else
+                    if (shouldStayAlive)
+                        newTaskEvent.WaitOne();
 
                 lock (aliveLock)
                     shouldStayAlive = alive;
@@ -83,14 +95,32 @@ namespace ByondLang.Interface
             if (!taskWasPreviouslyQueued)
                 QueueTask(task);
             else
+            {
+                bool inRegular, inPriority;
                 lock (tasks)
-                    if (!tasks.Contains(task))
-                        return false;
+                    inRegular = tasks.Contains(task);
+                lock (priorityTasks)
+                    inPriority = priorityTasks.Contains(task);
+                if (!inPriority && !inRegular)
+                    return false;
+            }
 
             while (!task.IsCompleted)
                 taskExecuted.WaitOne();
 
             return true;
+        }
+
+        public void PrioritizeTask(Task task)
+        {
+            lock (tasks)
+            {
+                tasks.Remove(task);
+            }
+            newTaskEvent.Reset();
+            lock (priorityTasks)
+                priorityTasks.AddLast(task);
+            newTaskEvent.Set();
         }
 
         protected override bool TryDequeue(Task task)

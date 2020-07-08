@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using ByondLang.Interface;
 using ByondLang.Language;
+using ByondLang.Models;
+using ByondLang.Models.Request;
 using ByondLang.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,11 +18,11 @@ namespace ByondLang.Controllers
     [ApiController]
     public class NTSLController : ControllerBase
     {
-        NTSLService _service;
+        NTSL3Service _newService;
         ILogger _log;
-        public NTSLController(NTSLService service, ILogger<NTSLController> logger)
+        public NTSLController(NTSL3Service newService, ILogger<NTSLController> logger)
         {
-            _service = service;
+            _newService = newService;
             _log = logger;
         }
 
@@ -27,141 +30,72 @@ namespace ByondLang.Controllers
         [HttpGet("/clear")]
         public int Clear()
         {
-            _service.Reset();
+            _newService.Reset();
             return 1;
         }
 
         [HttpGet("/new_program")]
-        public int NewProgram([FromQuery] string code = "", [FromQuery(Name = "ref")] string computerRef = "")
+        public async Task<int> NewProgram([FromQuery] ProgramType type, [FromQuery(Name = "ref")] string computerRef = "")
         {
-            try
+            switch (type)
             {
-                return _service.NewProgram(code, computerRef);
-            }
-            catch (Exception e)
-            {
-                _log.LogError(e, "New program failed with exception.");
-                return 0;
+                case ProgramType.Computer:
+                    return await _newService.NewProgram((r, c, m) => new ComputerProgram(r, c, m, computerRef));
+                case ProgramType.TCom:
+                    return await _newService.NewProgram((r, c, m) => new TComProgram(r, c, m));
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
         [HttpGet("/execute")]
-        public int Execute([FromQuery] int id, [FromQuery] int cycles = 0)
+        public int Execute([FromQuery] int id, [FromQuery] string code = "")
         {
-            try
-            {
-                _service.Execute(id, cycles);
-                return 1;
-            }
-            catch (Exception e)
-            {
-                _log.LogError(e, "Execute failed with exception.");
-                return 0;
-            }
-        }
-
-        [HttpGet("/get_buffer")]
-        public string GetBuffer([FromQuery] int id, [FromQuery] int cycles = 0)
-        {
-            try
-            {
-                return _service.GetTerminalBuffer(id);
-            }
-            catch (Exception e)
-            {
-                _log.LogError(e, "GetBuffer failed with exception.");
-                return "Unknown Error.";
-            }
+            _newService.Execute(id, code);
+            return 1;
         }
 
         [HttpGet("/remove")]
         public int Remove([FromQuery] int id)
         {
-            try
-            {
-                _service.Remove(id);
-                return 1;
-            }
-            catch (Exception e)
-            {
-                _log.LogError(e, "GetBuffer failed with exception.");
-                return 0;
-            }
+            _newService.Remove(id);
+            return 1;
         }
 
-        [HttpGet("/message")]
-        public int Message([FromQuery] int id, [FromQuery] string signal_ref, [FromQuery] string encSignal)
+        [HttpGet("/computer/get_buffer")]
+        public string GetBuffer([FromQuery] int id)
         {
-            var signal = HttpUtility.ParseQueryString(encSignal);
-            try
-            {
-                _service.ProcessMessage(id, signal_ref, signal);
-                return 1;
-            }
-            catch (Exception e)
-            {
-                _log.LogError(e, "Remove failed with exception.");
-                return 0;
-            }
+            var program = _newService.GetProgram<ComputerProgram>(id);
+            return program.GetTerminalBuffer();
         }
 
-        [HttpGet("/get_signal")]
-        public Signal? GetSignal([FromQuery] int id)
+        [HttpGet("/computer/topic")]
+        public int TopicCall([FromQuery] int id, [FromQuery] string topic = "", [FromQuery] string data = "")
         {
-            try
-            {
-                return _service.GetSignal(id);
-            }
-            catch (Exception e)
-            {
-                _log.LogError(e, "GetSignal failed with exception.");
-                return null;
-            }
+            var program = _newService.GetProgram<ComputerProgram>(id);
+            program.HandleTopic(topic, data);
+            return 1;
         }
 
-        [HttpGet("/subspace_receive")]
-        public int SubspaceReceive([FromQuery] string channel, [FromQuery] string type, [FromQuery] string data)
+        [HttpPost("/tcom/process")]
+        public async Task<int> ProcessSignal(TComProcessRequest request)
         {
-            try
-            {
-                _service.SubspaceReceive(channel, type, data);
-                return 1;
-            }
-            catch (Exception e)
-            {
-                _log.LogError(e, "SubspaceReceive failed with exception.");
-                return 0;
-            }
+            var program = _newService.GetProgram<TComProgram>(request.Id);
+            await program.ProcessSignal(request.Signal);
+            return 1;
         }
 
-
-        [HttpGet("/subspace_transmit")]
-        public string SubspaceTransmit()
+        [HttpGet("/tcom/get")]
+        public TComSignal[] GetSignals([FromQuery] int id)
         {
-            try
-            {
-                return _service.GetSubspaceMessageToSend();
-            }
-            catch (Exception e)
-            {
-                _log.LogError(e, "SubspaceTransmit failed with exception.");
-                return "0";
-            }
+            var program = _newService.GetProgram<TComProgram>(id);
+            return program.GetSignals();
         }
 
-        [HttpGet("/topic")]
-        public int TopicCall([FromQuery] int id, [FromQuery] string topic = "")
+        public enum ProgramType
         {
-            try
-            {
-                _service.HandleTopic(id, topic);
-                return 1;
-            }
-            catch (Exception e)
-            {
-                _log.LogError(e, "TopicCall failed with exception.");
-                return 0;
-            }
+            Computer,
+            TCom
         }
     }
 }

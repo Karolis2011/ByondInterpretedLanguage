@@ -86,8 +86,7 @@ namespace ByondLang.ChakraCore.Hosting
                             {
                                 throw new JsFatalException(innerError);
                             }
-
-                            throw new JsScriptException(error, errorObject, "Script threw an exception.");
+                            throw JsScriptException.FromError(error, errorObject, "Script error");
                         }
 
                     case JsErrorCode.ScriptCompile:
@@ -98,8 +97,7 @@ namespace ByondLang.ChakraCore.Hosting
                             {
                                 throw new JsFatalException(innerError);
                             }
-
-                            throw new JsScriptException(error, errorObject, "Compile error.");
+                            throw JsScriptException.FromError(error, errorObject, "Compile error");
                         }
 
                     case JsErrorCode.ScriptTerminated:

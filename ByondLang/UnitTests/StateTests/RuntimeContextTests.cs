@@ -10,11 +10,11 @@ namespace ByondLang.UnitTests.StateTests
     public class RuntimeContextTests
     {
         [Fact]
-        public void ConstructAndDispose()
+        public async void ConstructAndDispose()
         {
-            using (var runtime = new Runtime())
+            using (var runtime = new Runtime(null))
             {
-                var program = runtime.BuildContext((r, c, m) => new BaseProgram(r, c, m));
+                var program = await runtime.BuildContext((r, c, m) => new BaseProgram(r, c, m));
 
                 var result = program.ExecuteScript("Math.PI * (5+2)");
 

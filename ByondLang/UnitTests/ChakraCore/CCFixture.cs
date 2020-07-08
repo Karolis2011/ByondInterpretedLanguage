@@ -11,13 +11,13 @@ namespace ByondLang.UnitTests.ChakraCore
     {
         public JsRuntime runtime;
         public JsContext context;
-        public ByondLang.ChakraCore.TypeMapper typeMapper;
+        public TypeMapper typeMapper;
         public CCFixture()
         {
             runtime = JsRuntime.Create(JsRuntimeAttributes.AllowScriptInterrupt);
             context = runtime.CreateContext();
             context.AddRef();
-            typeMapper = new ByondLang.ChakraCore.TypeMapper();
+            typeMapper = new TypeMapper();
         }
 
         public void Dispose()

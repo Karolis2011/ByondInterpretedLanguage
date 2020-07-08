@@ -1,5 +1,6 @@
 ﻿using ByondLang.ChakraCore;
 using ByondLang.ChakraCore.Hosting;
+using ByondLang.Services;
 using Microsoft.CSharp.RuntimeBinder;
 using System;
 using System.Collections.Generic;
@@ -14,26 +15,36 @@ namespace ByondLang.Interface
         public const int DEFAULT_SCRIPT_TIMEOUT = 2000;
         public const int DEFAULT_PROMISE_TIMEOUT = 2000;
         private JsRuntime runtime;
-        private ChakraCore.TypeMapper typeMapper = new ChakraCore.TypeMapper();
+        private TypeMapper typeMapper = new TypeMapper();
         private RuntimeTaskScheduler scheduler = new RuntimeTaskScheduler();
         private TaskFactory factory;
         private List<BaseProgram> programs = new List<BaseProgram>();
+        private Dictionary<string, JsValue> callbacks = new Dictionary<string, JsValue>();
+        public readonly NTSL3Service Service;
 
-        public Runtime()
+        public Runtime(NTSL3Service service)
         {
             factory = new TaskFactory(scheduler);
             runtime = JsRuntime.Create(JsRuntimeAttributes.AllowScriptInterrupt);
+            Service = service;
         }
 
-        public T BuildContext<T>(Func<Runtime, JsContext, ChakraCore.TypeMapper, T> initializer) where T : BaseProgram
+        public async Task<T> BuildContext<T>(Func<Runtime, JsContext, TypeMapper, T> initializer) where T : BaseProgram
         {
-            var context = runtime.CreateContext();
-            using (new JsContext.Scope(context))
+            var buildTask = Function(() =>
             {
-                // TODO: Configure promise callback. Promises should be added to be executed along main queue of work.
-                // JsContext.SetPromiseContinuationCallback();
-            }
+                var context = runtime.CreateContext();
+                using (new JsContext.Scope(context))
+                {
+                    // TODO: Configure promise callback. Promises should be added to be executed along main queue of work.
+                    // JsContext.SetPromiseContinuationCallback();
+                }
+                return context;
+            });
+            scheduler.PrioritizeTask(buildTask);
+            var context = await buildTask;
             var program = initializer(this, context, typeMapper);
+            program.InitializeState();
             programs.Add(program);
             return program;
         }
@@ -57,7 +68,7 @@ namespace ByondLang.Interface
             });
         }*/
 
-        private void TimedFn(int timeout, Action timedAction)
+        private void TimedFn(int timeout, Action timedAction, Func<Exception, bool> exHandler)
         {
             using (var timer = new Timer(state =>
             {
@@ -68,16 +79,26 @@ namespace ByondLang.Interface
                 {
                     timedAction();
                 }
-                catch (JsScriptException ex)
+                //catch (JsScriptException ex)
+                //{
+                //    if (ex.ErrorCode != JsErrorCode.ScriptTerminated)
+                //        if (exHandler != null)
+                //            exHandler(ex);
+                //        else
+                //            throw;
+                //}
+                catch (Exception ex)
                 {
-                    if (ex.ErrorCode != JsErrorCode.ScriptTerminated)
+                    if (exHandler != null)
+                        exHandler(ex);
+                    else
                         throw;
                 }
             }
             runtime.Disabled = false;
         }
 
-        private R TimedFn<R>(int timeout, Func<R> timedAction)
+        private R TimedFn<R>(int timeout, Func<R> timedAction, Func<Exception, bool> exHandler)
         {
             R result = default;
             using (var timer = new Timer(state =>
@@ -89,22 +110,31 @@ namespace ByondLang.Interface
                 {
                     result = timedAction();
                 }
-                catch (JsScriptException ex)
+                //catch (JsScriptException ex)
+                //{
+                //    if (ex.ErrorCode != JsErrorCode.ScriptTerminated)
+                //        if (exHandler != null)
+                //            exHandler(ex);
+                //        else
+                //            throw;
+                //}
+                catch (Exception ex)
                 {
-                    if (ex.ErrorCode != JsErrorCode.ScriptTerminated)
+                    if (exHandler?.Invoke(ex) != true)
                         throw;
                 }
+
             }
             runtime.Disabled = false;
             return result;
         }
 
-        public Task TimedFunction(int timeout, Action function) => factory.StartNew(() => TimedFn(timeout, function));
-        public Task TimedFunction(Action function) => TimedFunction(DEFAULT_SCRIPT_TIMEOUT, function);
+        public Task TimedFunction(int timeout, Action function, Func<Exception, bool> exHandler = null) => factory.StartNew(() => TimedFn(timeout, function, exHandler));
+        public Task TimedFunction(Action function, Func<Exception, bool> exHandler = null) => TimedFunction(DEFAULT_SCRIPT_TIMEOUT, function, exHandler);
         public Task Function(Action function) => factory.StartNew(function);
-        public Task<TResult> TimedFunction<TResult>(int timeout, Func<TResult> function) => factory.StartNew(() => TimedFn(timeout, function));
-        public Task<TResult> TimedFunction<TResult>(Func<TResult> function) => TimedFunction(DEFAULT_SCRIPT_TIMEOUT, function);
-        public Task<TResult> Function<TResult>(Func<TResult> function) => factory.StartNew(function);
+        public Task<TResult> TimedFunction<TResult>(int timeout, Func<TResult> function, Func<Exception, bool> exHandler = null) => factory.StartNew(() => TimedFn(timeout, function, exHandler));
+        public Task<TResult> TimedFunction<TResult>(Func<TResult> function, Func<Exception, bool> exHandler = null) => TimedFunction(DEFAULT_SCRIPT_TIMEOUT, function, exHandler);
+        public Task<TResult> Function<TResult>(Func<TResult> function, Func<Exception, bool> exHandler = null) => factory.StartNew(function);
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls

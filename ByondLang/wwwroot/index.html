@@ -26,14 +26,30 @@
 			$("#output").append(`[${Date()}] ${o}\r\n`)
 		}
 
-		function create_program() {
+		function create_program_com() {
 			if(programId != null)
 				return;
 			$.ajax({
 				type: "GET",
 				url: "/new_program",
 				data: {
-					code: editor.getValue()
+					type: "Computer"
+                },
+				success: (data) => {
+                    console_log("Program id: " + data)
+					programId = data
+				}
+			})
+        }
+
+		function create_program_tcom() {
+			if(programId != null)
+				return;
+			$.ajax({
+				type: "GET",
+				url: "/new_program",
+				data: {
+					type: "TCom"
                 },
 				success: (data) => {
                     console_log("Program id: " + data)
@@ -49,47 +65,17 @@
 				type: "GET",
                 url: `/execute`,
 				data: {
-					id: programId,
-                    cycles: 1000
+                    id: programId,
+					code: editor.getValue()
 				},
 				success: (data) => {
 					$("#version").text("Execution result:" + data)
 					console_log(data)
 				}
 			})
-		}
-
-        function get_buffer() {
-            if (programId == null)
-				return;
-            $.ajax({
-                type: "GET",
-                url: `/get_buffer`,
-                data: {
-                    id: programId
-                },
-                success: (data) => {
-                    $("#consolebuffer").html(data)
-                }
-            })
-		}
-
-        function get_signal() {
-            if (programId == null)
-                return;
-            $.ajax({
-                type: "GET",
-                url: `/get_signal`,
-                data: {
-                    id: programId
-                },
-                success: (data) => {
-                    console_log(data)
-                }
-            })
         }
 
-		function reset_program() {
+		function remove_program() {
 			if(programId == null)
 				return;
 			$.ajax({
@@ -105,20 +91,55 @@
 					programId = null;
 				}
 			})
-		}</script>
+        }
+
+        function get_buffer() {
+            if (programId == null)
+				return;
+            $.ajax({
+                type: "GET",
+                url: `/computer/get_buffer`,
+                data: {
+                    id: programId
+                },
+                success: (data) => {
+                    $("#consolebuffer").html(data)
+                }
+            })
+        }
+
+		function reset() {
+            if (programId == null)
+				return;
+            $.ajax({
+                type: "GET",
+                url: `/clear`,
+                success: (data) => {
+                    $("#version").text(data)
+					$("#consolebuffer").text("")
+					$("#output").text("")
+					programId = null;
+                }
+            })
+		}
+
+
+		
+	</script>
 </head>
 <body>
-	<button onClick="create_program()">Create new program</button>
+	<button onClick="create_program_com()">Create console program</button>
+	<button onClick="create_program_tcom()">Create TCom program</button>
+	<button onClick="remove_program()">Delete program</button>
 	<button onClick="exec_program()">Execute</button>
 	<button onClick="get_buffer()">Get buffer</button>
-	<button onClick="get_signal()">Get signal</button>
-	<button onClick="reset_program()">Delete program</button>
+	<button onClick="reset()">!!Reset</button>
 	<hr>
 	<h4 id="version"></h4>
 	<div id="source">
-		Console.Log("Testing")
-		if(5 * 3)
-		Console.Log(2^8)
+Term.write("AAAA")
+if(5 * 3)
+Term.write(2^8)
 	</div>
 	<hr>
 	<div id="consolebuffer"></div>
@@ -133,7 +154,9 @@
 		ace.require("ace/ext/language_tools");
 		window.editor = ace.edit("source");
 		editor.setOptions({
-			enableBasicAutocompletion: true
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+			enableSnippets: true
 		});
 		editor.setTheme("ace/theme/monokai");
 		editor.session.setMode("ace/mode/javascript");</script>
