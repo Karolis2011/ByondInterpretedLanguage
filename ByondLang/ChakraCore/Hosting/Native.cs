@@ -115,7 +115,7 @@ namespace ByondLang.ChakraCore.Hosting
             }
         }
 
-        const string DllName = "ChakraCore.dll";
+        const string DllName = "ChakraCore";
 
         [DllImport(DllName)]
         internal static extern JsErrorCode JsCreateRuntime(JsRuntimeAttributes attributes, JsThreadServiceCallback threadService, out JsRuntime runtime);
@@ -168,20 +168,7 @@ namespace ByondLang.ChakraCore.Hosting
         [DllImport(DllName)]
         internal static extern JsErrorCode JsIdle(out uint nextIdleTick);
 
-        [DllImport(DllName, CharSet = CharSet.Unicode)]
-        internal static extern JsErrorCode JsParseScript(string script, JsSourceContext sourceContext, string sourceUrl, out JsValue result);
-
-        [DllImport(DllName, CharSet = CharSet.Unicode)]
-        internal static extern JsErrorCode JsRunScript(string script, JsSourceContext sourceContext, string sourceUrl, out JsValue result);
-
-        [DllImport(DllName, CharSet = CharSet.Unicode)]
-        internal static extern JsErrorCode JsSerializeScript(string script, byte[] buffer, ref ulong bufferSize);
-
-        [DllImport(DllName, CharSet = CharSet.Unicode)]
-        internal static extern JsErrorCode JsParseSerializedScript(string script, byte[] buffer, JsSourceContext sourceContext, string sourceUrl, out JsValue result);
-
-        [DllImport(DllName, CharSet = CharSet.Unicode)]
-        internal static extern JsErrorCode JsRunSerializedScript(string script, byte[] buffer, JsSourceContext sourceContext, string sourceUrl, out JsValue result);
+        
 
         [DllImport(DllName, CharSet = CharSet.Unicode)]
         internal static extern JsErrorCode JsGetPropertyIdFromName(string name, out JsPropertyId propertyId);
@@ -428,14 +415,6 @@ namespace ByondLang.ChakraCore.Hosting
         internal static extern JsErrorCode JsSetContextData(JsContext context, IntPtr data);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsParseSerializedScriptWithCallback(JsSerializedScriptLoadSourceCallback scriptLoadCallback,
-            JsSerializedScriptUnloadCallback scriptUnloadCallback, byte[] buffer, JsSourceContext sourceContext, string sourceUrl, out JsValue result);
-
-        [DllImport(DllName)]
-        internal static extern JsErrorCode JsRunSerializedScriptWithCallback(JsSerializedScriptLoadSourceCallback scriptLoadCallback,
-            JsSerializedScriptUnloadCallback scriptUnloadCallback, byte[] buffer, JsSourceContext sourceContext, string sourceUrl, out JsValue result);
-
-        [DllImport(DllName)]
         internal static extern JsErrorCode JsSetPromiseContinuationCallback(
             JsPromiseContinuationCallback promiseContinuationCallback, IntPtr callbackState);
 
@@ -453,10 +432,10 @@ namespace ByondLang.ChakraCore.Hosting
            JsHostPromiseRejectionTrackerCallback promiseRejectionTrackerCallback, IntPtr callbackState);
 
         [DllImport(DllName, CharSet = CharSet.Unicode)]
-        internal static extern JsErrorCode JsParse(JsValue script, JsSourceContext sourceContext, string sourceUrl, JsParseScriptAttributes parseAttributes, out JsValue result);
+        internal static extern JsErrorCode JsParse(JsValue script, JsSourceContext sourceContext, JsValue sourceUrl, JsParseScriptAttributes parseAttributes, out JsValue result);
 
         [DllImport(DllName, CharSet = CharSet.Unicode)]
-        internal static extern JsErrorCode JsRun(JsValue script, JsSourceContext sourceContext, string sourceUrl, JsParseScriptAttributes parseAttributes, out JsValue result);
+        internal static extern JsErrorCode JsRun(JsValue script, JsSourceContext sourceContext, JsValue sourceUrl, JsParseScriptAttributes parseAttributes, out JsValue result);
 
         // TODO:
         // https://github.com/Microsoft/ChakraCore/issues/4324

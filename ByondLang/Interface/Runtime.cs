@@ -37,7 +37,7 @@ namespace ByondLang.Interface
                 using (new JsContext.Scope(context))
                 {
                     // TODO: Configure promise callback. Promises should be added to be executed along main queue of work.
-                    // JsContext.SetPromiseContinuationCallback();
+                    JsContext.SetPromiseContinuationCallback(PromiseContinuationCallback, IntPtr.Zero);
                 }
                 return context;
             });
@@ -54,7 +54,6 @@ namespace ByondLang.Interface
             programs.Remove(context);
         }
 
-        /*
         private void PromiseContinuationCallback(JsValue task, IntPtr callbackState)
         {
             task.AddRef();
@@ -63,10 +62,11 @@ namespace ByondLang.Interface
             {
                 using (new JsContext.Scope(context))
                 {
-
+                    task.CallFunction(JsValue.GlobalObject);
                 }
+                task.AddRef();
             });
-        }*/
+        }
 
         private void TimedFn(int timeout, Action timedAction, Func<Exception, bool> exHandler)
         {

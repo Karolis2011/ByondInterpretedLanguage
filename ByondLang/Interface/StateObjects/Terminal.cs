@@ -1,6 +1,7 @@
 ﻿using ByondLang.ChakraCore;
 using ByondLang.ChakraCore.Hosting;
 using ByondLang.ChakraCore.Reflection;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -87,7 +88,7 @@ namespace ByondLang.Interface.StateObjects
                 char_array[y] = new TerminalChar[width];
                 for (int x = 0; x < width; x++)
                 {
-                    char_array[y][x] = new TerminalChar(' ', background, foreground, "");
+                    char_array[y][x] = new TerminalChar(' ', background, foreground);
                 }
             }
         }
@@ -131,7 +132,7 @@ namespace ByondLang.Interface.StateObjects
                 {
                     lock (char_array)
                     {
-                        char_array[cursorY][cursorX] = new TerminalChar(c, background, foreground, "");
+                        char_array[cursorY][cursorX] = new TerminalChar(c, background, foreground);
                     }
                     MoveRight();
                 }
@@ -164,47 +165,79 @@ namespace ByondLang.Interface.StateObjects
 
         public string Stringify()
         {
-            StringBuilder outp = new StringBuilder();
+            StringBuilder o = new StringBuilder();
             lock (char_array)
             {
-                for (int y = 0; y < height; y++)
+                for (int y = 0; y < char_array.Length; y++)
                 {
-                    if (y != 0)
-                        outp.Append("<br>");
-                    for (int x = 0; x < width; x++)
+                    var row = char_array[y];
+                    Color lastfg = null;
+                    Color lastbg = null;
+                    string lastTopic = null;
+                    for (int x = 0; x < row.Length; x++)
                     {
-
-                        TerminalChar toDraw = char_array[y][x];
-
-                        // Is out color diffrent?
-                        if (x == 0 || !toDraw.Like(char_array[y][x - 1]))
-                            // We are not at start, so we close prevous color
-                            if (x != 0)
-                                outp.Append(toDraw.ColorClose());
-                        outp.Append(toDraw.ColorOpen());
-
-                        // Open topic 
-                        if (toDraw.topic != "" && (x == 0 || toDraw.topic != char_array[y][x - 1].topic))
+                        var termChar = row[x];
+                        if(x == 0)
                         {
-                            outp.Append($"<a style='text-decoration:none;' href='?src={computer_ref};PRG_topic={HttpUtility.UrlEncode(toDraw.topic)}'>");
-                            outp.Append(toDraw.ColorOpen());
+                            // Jut clean line init
+                            if(termChar.topic != null)
+                            {
+                                o.Append(formatLinkOpening(termChar.topic));
+                                lastTopic = termChar.topic;
+                            }
+                            o.Append(formatColorOpening(termChar.foreground, termChar.background));
+                            lastfg = termChar.foreground;
+                            lastbg = termChar.background;
+                        } else
+                        {
+                            if(lastTopic != termChar.topic)
+                            {
+                                // Topic is diffrent, let's change that
+                                o.Append(formatColorClosing(lastfg, lastbg)); // before doing anything close colors
+                                if (lastTopic != null) // If topic was opened
+                                {
+                                    o.Append(formatLinkClosing(lastTopic)); // Close topic
+                                }
+                                if (termChar.topic != null)
+                                {
+                                    o.Append(formatLinkOpening(termChar.topic)); // Open new topic
+                                }
+                                o.Append(formatColorOpening(termChar.foreground, termChar.background)); // Open new colors
+                                lastTopic = termChar.topic;
+                                lastfg = termChar.foreground;
+                                lastbg = termChar.background;
+                            }
+                            if(lastfg != termChar.foreground || lastbg != termChar.background)
+                            {
+                                // Colors diffrent, close and reopen
+                                o.Append(formatColorClosing(lastfg, lastbg)); // close colors
+                                o.Append(formatColorOpening(termChar.foreground, termChar.background)); // Open new colors
+                                lastfg = termChar.foreground;
+                                lastbg = termChar.background;
+                            }
                         }
 
-                        outp.Append(encode(toDraw.text));
-
-                        if (x == width - 1)
-                            outp.Append(toDraw.ColorClose());
-
-                        if (toDraw.topic != "" && !(x < width - 1 && toDraw.topic == char_array[y][x + 1].topic))
-                        {
-                            outp.Append("</a>");
-
-                        }
+                        // Ourput char
+                        o.Append(encode(termChar.text));
                     }
+
+                    o.Append(formatColorClosing(lastfg, lastbg)); // close colors
+                    if (lastTopic != null) // If topic was opened
+                    {
+                        o.Append(formatLinkClosing(lastTopic)); // Close topic
+                    }
+                    o.Append("<br/>"); // Add line break
                 }
             }
-            return outp.ToString();
+            return o.ToString();
         }
+
+        internal string formatLinkOpening(string topic) => $"<to to=\"{topic}\">";
+        internal string formatLinkClosing(string topic) => $"</to>";
+
+
+        internal string formatColorOpening(Color fg, Color bg) => $"<co fg=\"{fg.toHTML()}\" bg=\"{bg.toHTML()}\">";
+        internal string formatColorClosing(Color fg, Color bg) => $"</co>";
 
         public string encode(char c)
         {
@@ -212,7 +245,6 @@ namespace ByondLang.Interface.StateObjects
                 return "&nbsp;";
             return HttpUtility.HtmlEncode(c.ToString());
         }
-
 
         public void MoveRight()
         {
@@ -237,7 +269,7 @@ namespace ByondLang.Interface.StateObjects
                 char_array[height - 1] = new TerminalChar[width];
                 for (int x = 0; x < width; x++)
                 {
-                    char_array[height - 1][x] = new TerminalChar(' ', background, foreground, "");
+                    char_array[height - 1][x] = new TerminalChar(' ', background, foreground);
                 }
             }
         }
@@ -269,14 +301,14 @@ namespace ByondLang.Interface.StateObjects
             public char text = ' ';
             public Color background = new Color(0, 0, 0);
             public Color foreground = new Color(255, 255, 255);
-            public string topic = "";
+            public string topic = null;
 
 
             public TerminalChar()
             {
             }
 
-            public TerminalChar(char text, Color background, Color foreground, string topic) : base()
+            public TerminalChar(char text, Color background, Color foreground, string topic = null) : base()
             {
                 this.text = text;
                 this.background = background.Copy();
@@ -284,52 +316,36 @@ namespace ByondLang.Interface.StateObjects
                 this.topic = topic;
             }
 
-            public bool Like(TerminalChar other)
-            {
-                return background.r == other.background.r &&
-                       background.g == other.background.g &&
-                       background.b == other.background.b &&
-                       foreground.r == other.foreground.r &&
-                       foreground.g == other.foreground.g &&
-                       foreground.b == other.foreground.b;
-            }
 
-            internal string ColorOpen() => $"<span style=\"color:{foreground.toHTML()};background-color:{background.toHTML()}\">";
-            internal string ColorClose() => $"</span>";
+
         }
 
         public class Color
         {
-            public float r = 0;
-            public float g = 0;
-            public float b = 0;
+            public byte r = 0;
+            public byte g = 0;
+            public byte b = 0;
 
             public Color()
             {
-
             }
 
-            public Color(float r, float g, float b)
+            public Color(float r, float g, float b) : this((int)(r * 255), (int)(g * 255), (int)(b * 255))
             {
-                this.r = r;
-                this.g = g;
-                this.b = b;
-                Validate();
             }
 
             public Color(int r, int g, int b)
             {
-                this.r = (r / 255.0f);
-                this.g = (g / 255.0f);
-                this.b = (b / 255.0f);
-                Validate();
+                this.r = (byte)Math.Clamp(r, 0, 255);
+                this.g = (byte)Math.Clamp(g, 0, 255);
+                this.b = (byte)Math.Clamp(b, 0, 255);
             }
 
-            public void Validate()
+            public Color(byte r, byte g, byte b)
             {
-                r = Math.Clamp(r, 0.0f, 1.0f);
-                g = Math.Clamp(g, 0.0f, 1.0f);
-                b = Math.Clamp(b, 0.0f, 1.0f);
+                this.r = r;
+                this.g = g;
+                this.b = b;
             }
 
             public Color Copy()
@@ -339,10 +355,52 @@ namespace ByondLang.Interface.StateObjects
 
             public string toHTML()
             {
-                int R = (int)(r * 255);
-                int G = (int)(g * 255);
-                int B = (int)(b * 255);
-                return $"#{R.ToString("X2")}{G.ToString("X2")}{B.ToString("X2")}";
+                return $"{r:X2}{g:X2}{b:X2}";
+            }
+
+            // override object.Equals
+            public bool Equals(Color c)
+            {
+                if (ReferenceEquals(c, null))
+                    return false;
+
+                // Optimization for a common success case.
+                if (ReferenceEquals(this, c))
+                    return true;
+
+                return r == c.r && g == c.g && b == c.b;
+            }
+
+            public override int GetHashCode()
+            {
+                int hash = r.GetHashCode();
+                unchecked
+                {
+                    hash += g.GetHashCode();
+                    hash += b.GetHashCode();
+                }
+                return hash;
+            }
+
+            public static bool operator ==(Color lhs, Color rhs)
+            {
+                if (ReferenceEquals(lhs, null))
+                {
+                    if (ReferenceEquals(rhs, null))
+                    {
+                        // null == null = true.
+                        return true;
+                    }
+
+                    // Only the left side is null.
+                    return false;
+                }
+                return lhs.Equals(rhs);
+            }
+
+            public static bool operator !=(Color lhs, Color rhs)
+            {
+                return !(lhs == rhs);
             }
         }
     }
