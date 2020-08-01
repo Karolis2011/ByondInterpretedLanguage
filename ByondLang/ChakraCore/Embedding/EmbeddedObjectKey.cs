@@ -139,7 +139,7 @@ namespace ByondLang.ChakraCore.Embedding
 
 		public override bool Equals(object obj)
 		{
-			return obj is EmbeddedObjectKey && Equals((EmbeddedObjectKey)obj);
+			return obj is EmbeddedObjectKey key && Equals(key);
 		}
 
 		public override int GetHashCode()

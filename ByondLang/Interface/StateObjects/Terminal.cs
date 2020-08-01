@@ -371,6 +371,11 @@ namespace ByondLang.Interface.StateObjects
                 return r == c.r && g == c.g && b == c.b;
             }
 
+            public override bool Equals(object c)
+            {
+                return Equals(c as Color);
+            }
+
             public override int GetHashCode()
             {
                 int hash = r.GetHashCode();

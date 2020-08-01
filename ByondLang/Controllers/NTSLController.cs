@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
 using ByondLang.Interface;
-using ByondLang.Language;
 using ByondLang.Models;
 using ByondLang.Models.Request;
 using ByondLang.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 
 namespace ByondLang.Controllers
@@ -37,15 +31,12 @@ namespace ByondLang.Controllers
         [HttpGet("/new_program")]
         public async Task<int> NewProgram([FromQuery] ProgramType type, [FromQuery(Name = "ref")] string computerRef = "")
         {
-            switch (type)
+            return type switch
             {
-                case ProgramType.Computer:
-                    return await _newService.NewProgram((r, c, m) => new ComputerProgram(r, c, m, computerRef));
-                case ProgramType.TCom:
-                    return await _newService.NewProgram((r, c, m) => new TComProgram(r, c, m));
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                ProgramType.Computer => await _newService.NewProgram((r, c, m) => new ComputerProgram(r, c, m, computerRef)),
+                ProgramType.TCom => await _newService.NewProgram((r, c, m) => new TComProgram(r, c, m)),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
 
         [HttpGet("/execute")]
