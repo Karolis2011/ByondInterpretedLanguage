@@ -22,7 +22,6 @@ namespace ByondLang.Interface.StateObjects
         public int width { get; private set; } = 64;
         [JsMapped]
         public int height { get; private set; } = 20;
-        string computer_ref;
         TerminalChar[][] char_array;
 
         public Color background = new Color(0, 0, 0);
@@ -30,16 +29,15 @@ namespace ByondLang.Interface.StateObjects
 
         private BaseProgram context;
 
-        public Terminal(int width, int height, string computer_ref, BaseProgram context)
+        public Terminal(int width, int height, BaseProgram context)
         {
-            this.computer_ref = computer_ref;
             this.width = width;
             this.height = height;
             this.context = context;
             clear();
         }
 
-        public Terminal(string computer_ref, BaseProgram context) : this(64, 20, computer_ref, context) { }
+        public Terminal(BaseProgram context) : this(64, 20, context) { }
 
         [JsCallable]
         public void setForeground(float r, float g, float b) => foreground = new Color(r, g, b);

@@ -29,11 +29,11 @@ namespace ByondLang.Controllers
         }
 
         [HttpGet("/new_program")]
-        public async Task<int> NewProgram([FromQuery] ProgramType type, [FromQuery(Name = "ref")] string computerRef = "")
+        public async Task<int> NewProgram([FromQuery] ProgramType type)
         {
             return type switch
             {
-                ProgramType.Computer => await _newService.NewProgram((r, c, m) => new ComputerProgram(r, c, m, computerRef)),
+                ProgramType.Computer => await _newService.NewProgram((r, c, m) => new ComputerProgram(r, c, m)),
                 ProgramType.TCom => await _newService.NewProgram((r, c, m) => new TComProgram(r, c, m)),
                 _ => throw new ArgumentOutOfRangeException(),
             };

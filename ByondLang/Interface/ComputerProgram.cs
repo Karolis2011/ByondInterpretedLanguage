@@ -12,10 +12,9 @@ namespace ByondLang.Interface
         private Terminal terminal;
         public string ComputerRef { get; private set; }
 
-        public ComputerProgram(Runtime runtime, JsContext context, ChakraCore.TypeMapper typeMapper, string computerRef) : base(runtime, context, typeMapper)
+        public ComputerProgram(Runtime runtime, JsContext context, ChakraCore.TypeMapper typeMapper) : base(runtime, context, typeMapper)
         {
-            ComputerRef = computerRef;
-            terminal = new Terminal(computerRef, this);
+            terminal = new Terminal(this);
         }
 
         public string GetTerminalBuffer()
