@@ -58,7 +58,9 @@ namespace ByondLang.UnitTests.StateTests
             s.PrioritizeTask(task3);
             Assert.True(task3.Wait(500));
             Assert.True(flag3); // We expect task3 to be finished as we asked
-            Assert.True(flag1); // task1 probably has already started execution, so we also expect it to be finished
+            // We wait for task 1 and then check for flag.
+            Assert.True(task1.Wait(500));
+            Assert.True(flag1); // we also expect it to be finished
             Assert.False(flag2); // And we expect task2 to not have finished yeat.
 
         }
