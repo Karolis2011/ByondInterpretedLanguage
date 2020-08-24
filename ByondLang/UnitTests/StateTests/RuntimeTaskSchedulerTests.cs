@@ -9,17 +9,6 @@ namespace ByondLang.UnitTests.StateTests
 {
     public class RuntimeTaskSchedulerTests
     {
-        [Fact]
-        public void CreateAndDisposeExecutionStop()
-        {
-            var s = new JsPFIFOScheduler();
-            s.Dispose();
-            bool flag = false;
-            var task = s.Run(() => flag = true);
-            task.Wait(20);
-            Assert.False(flag);
-            Assert.False(task.IsCompleted);
-        }
 
         [Fact]
         public void CreateAndDisposeSequential()
