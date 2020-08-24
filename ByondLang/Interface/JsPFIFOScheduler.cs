@@ -78,6 +78,7 @@ namespace ByondLang.Interface
             lock (aliveLock)
                 alive = false;
             newTaskEvent.Reset();
+            Thread.SpinWait(1);
             newTaskEvent.Set();
         }
     }
