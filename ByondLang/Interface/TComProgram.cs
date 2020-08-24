@@ -18,7 +18,7 @@ namespace ByondLang.Interface
             comm = new Communications(runtime.Service);
         }
 
-        public Task ProcessSignal(TComSignal signal)
+        public JsTask ProcessSignal(TComSignal signal)
         {
             return _runtime.TimedFunction(() =>
             {
@@ -28,7 +28,7 @@ namespace ByondLang.Interface
                     if (comm.handler.IsValid && comm.handler.ValueType == JsValueType.Function && signal != null)
                         comm.handler.CallFunction(_typeMapper.MTS(signal));
                 }
-            }, HandleException);
+            }, this, HandleException, JsTaskPriority.CALLBACK);
         }
 
         public TComSignal[] GetSignals() => comm.GetSignals();

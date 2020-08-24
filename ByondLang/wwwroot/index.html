@@ -1,164 +1,241 @@
 ﻿<!DOCTYPE html>
 <html>
+
 <head>
-    <meta charset="utf-8" />
-    <title>NTSL3 online interface.</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-    <style>
+  <meta charset="utf-8" />
+  <title>NTSL3 online interface.</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <style>
+    #consolebuffer,
+    #output {
+      white-space: pre-wrap;
+      font-family: Consolas, monaco, monospace;
+    }
 
-        #consolebuffer, #output {
-            white-space: pre-wrap;
-            font-family: Consolas, monaco, monospace;
+    #source {
+      width: 100%;
+      height: 25em;
+    }
+
+    .terminal {
+      width: 100%;
+      font-family: monospace;
+      line-height: 1em;
+      font-size: 1em;
+      text-align: center;
+    }
+  </style>
+
+
+  <script>var programId = null;
+    window.vueapp = {};
+    function console_log(o) {
+      if (typeof o != "string")
+        o = JSON.stringify(o)
+      $("#output").append(`[${Date()}] ${o}\r\n`)
+    }
+
+    function create_program_com() {
+      if (programId != null)
+        return;
+      $.ajax({
+        type: "GET",
+        url: "/new_program",
+        data: {
+          type: "Computer"
+        },
+        success: (data) => {
+          console_log("Program id: " + data)
+          programId = data
+          get_buffer()
         }
+      })
+    }
 
-        #source {
-            width: 100%;
-            height: 25em;
+    function create_program_tcom() {
+      if (programId != null)
+        return;
+      $.ajax({
+        type: "GET",
+        url: "/new_program",
+        data: {
+          type: "TCom"
+        },
+        success: (data) => {
+          console_log("Program id: " + data)
+          programId = data
         }
-    </style>
+      })
+    }
 
-
-    <script>var programId = null;
-
-		function console_log(o) {
-			if(typeof o != "string")
-				o = JSON.stringify(o)
-			$("#output").append(`[${Date()}] ${o}\r\n`)
-		}
-
-		function create_program_com() {
-			if(programId != null)
-				return;
-			$.ajax({
-				type: "GET",
-				url: "/new_program",
-				data: {
-					type: "Computer"
-                },
-				success: (data) => {
-                    console_log("Program id: " + data)
-					programId = data
-				}
-			})
+    function exec_program() {
+      if (programId == null)
+        return;
+      $.ajax({
+        type: "GET",
+        url: `/execute`,
+        data: {
+          id: programId,
+          code: editor.getValue()
+        },
+        success: (data) => {
+          $("#version").text("Execution result:" + data)
+          console_log(data)
         }
+      })
+    }
 
-		function create_program_tcom() {
-			if(programId != null)
-				return;
-			$.ajax({
-				type: "GET",
-				url: "/new_program",
-				data: {
-					type: "TCom"
-                },
-				success: (data) => {
-                    console_log("Program id: " + data)
-					programId = data
-				}
-			})
-		}
-
-		function exec_program() {
-			if(programId == null)
-				return;
-			$.ajax({
-				type: "GET",
-                url: `/execute`,
-				data: {
-                    id: programId,
-					code: editor.getValue()
-				},
-				success: (data) => {
-					$("#version").text("Execution result:" + data)
-					console_log(data)
-				}
-			})
+    function remove_program() {
+      if (programId == null)
+        return;
+      $.ajax({
+        type: "GET",
+        url: `/remove`,
+        data: {
+          id: programId
+        },
+        success: (data) => {
+          $("#version").text(data)
+          window.vueapp.$data.buffer = ''
+          $("#output").text("")
+          programId = null;
         }
+      })
+    }
 
-		function remove_program() {
-			if(programId == null)
-				return;
-			$.ajax({
-                type: "GET",
-				url: `/remove`,
-				data: {
-                    id: programId
-                },
-				success: (data) => {
-					$("#version").text(data)
-					$("#consolebuffer").text("")
-					$("#output").text("")
-					programId = null;
-				}
-			})
+    function get_buffer() {
+      if (programId == null)
+        return;
+      $.ajax({
+        type: "GET",
+        url: `/computer/get_buffer`,
+        data: {
+          id: programId
+        },
+        success: (data) => {
+          window.vueapp.$data.buffer = data
         }
+      })
+    }
 
-        function get_buffer() {
-            if (programId == null)
-				return;
-            $.ajax({
-                type: "GET",
-                url: `/computer/get_buffer`,
-                data: {
-                    id: programId
-                },
-                success: (data) => {
-                    $("#consolebuffer").html(data)
-                }
-            })
+    function reset() {
+      if (programId == null)
+        return;
+      $.ajax({
+        type: "GET",
+        url: `/clear`,
+        success: (data) => {
+          $("#version").text(data)
+          window.vueapp.$data.buffer = ''
+          $("#output").text("")
+          programId = null;
         }
-
-		function reset() {
-            if (programId == null)
-				return;
-            $.ajax({
-                type: "GET",
-                url: `/clear`,
-                success: (data) => {
-                    $("#version").text(data)
-					$("#consolebuffer").text("")
-					$("#output").text("")
-					programId = null;
-                }
-            })
-		}
+      })
+    }
 
 
-		
-	</script>
+
+  </script>
 </head>
+
 <body>
-	<button onClick="create_program_com()">Create console program</button>
-	<button onClick="create_program_tcom()">Create TCom program</button>
-	<button onClick="remove_program()">Delete program</button>
-	<button onClick="exec_program()">Execute</button>
-	<button onClick="get_buffer()">Get buffer</button>
-	<button onClick="reset()">!!Reset</button>
-	<hr>
-	<h4 id="version"></h4>
-	<div id="source">
-Term.write("AAAA")
+  <button onClick="create_program_com()">Create console program</button>
+  <button onClick="create_program_tcom()">Create TCom program</button>
+  <button onClick="remove_program()">Delete program</button>
+  <button onClick="exec_program()">Execute</button>
+  <button onClick="get_buffer()">Get buffer</button>
+  <button onClick="reset()">!!Reset</button>
+  <hr>
+  <h4 id="version"></h4>
+  <div id="source">Term.write("AAAA")
 if(5 * 3)
-Term.write(2^8)
-	</div>
-	<hr>
-	<div id="consolebuffer"></div>
-	<hr>
-	<div id="output"></div>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ace.min.js" integrity="sha256-qCCcAHv/Z0u7K344shsZKUF2NR+59ooA3XWRj0LPGIQ=" crossorigin="anonymous"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/mode-javascript.min.js" integrity="sha256-cN39Ofb0/L/HOBScgDuoNefcVF4+MKdAsxXR3g/xyZw=" crossorigin="anonymous"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/theme-monokai.min.js" integrity="sha256-QjbDa92d4Q3oBUXnKXRhOrz8eONu3odsIlDHnNwg4y4=" crossorigin="anonymous"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ext-language_tools.min.js" integrity="sha256-KFXf4u8zJlXEUJckmmZbITzYENXMuqPqyrlscCKeqFU=" crossorigin="anonymous"></script>
-	<script>
-		ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/");
-		ace.require("ace/ext/language_tools");
-		window.editor = ace.edit("source");
-		editor.setOptions({
-            enableBasicAutocompletion: true,
-            enableLiveAutocompletion: true,
-			enableSnippets: true
-		});
-		editor.setTheme("ace/theme/monokai");
-		editor.session.setMode("ace/mode/javascript");</script>
+    Term.write(2^8)
+  </div>
+  <hr>
+  <div id="consolebuffer"></div>
+  <hr>
+  <div id="output"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ace.min.js"
+    integrity="sha256-qCCcAHv/Z0u7K344shsZKUF2NR+59ooA3XWRj0LPGIQ=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/mode-javascript.min.js"
+    integrity="sha256-cN39Ofb0/L/HOBScgDuoNefcVF4+MKdAsxXR3g/xyZw=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/theme-monokai.min.js"
+    integrity="sha256-QjbDa92d4Q3oBUXnKXRhOrz8eONu3odsIlDHnNwg4y4=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ext-language_tools.min.js"
+    integrity="sha256-KFXf4u8zJlXEUJckmmZbITzYENXMuqPqyrlscCKeqFU=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script>
+    ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/");
+    ace.require("ace/ext/language_tools");
+    window.editor = ace.edit("source");
+    editor.setOptions({
+      enableBasicAutocompletion: true,
+      enableLiveAutocompletion: true,
+      enableSnippets: true
+    });
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/javascript");</script>
+  <script>
+    const co = {
+      props: ['fg', 'bg'],
+      computed: {
+        style() {
+          return {
+            color: '#' + this.fg,
+            'background-color': '#' + this.bg
+          }
+        }
+      },
+      template: '<span :style="style"><slot/></span>'
+    }
+    const to = {
+      props: ['to'],
+      methods: {
+        invoke() {
+          if (programId == null)
+            return;
+          var topic = this.to;
+          var data = '';
+          if (this.to[0] == '?') {
+            topic = this.to.substring(1);
+            data = prompt('Please enter input...', '');
+          }
+          $.ajax({
+              type: "GET",
+              url: `/computer/topic`,
+              data: {
+                id: programId,
+                topic: topic,
+                data: data
+              },
+              success: (data) => {
+                get_buffer()
+              }
+            })
+        }
+      },
+      template: '<span style="cursor: pointer;" @click.prevent="invoke"><slot/></span>'
+    }
+
+    window.vueapp = new Vue({
+      el: '#consolebuffer',
+      template: '<component class="terminal" :is="term"/>',
+      data: {
+        buffer: ''
+      },
+      computed: {
+        term() {
+          return {
+            components: {
+              co, to
+            },
+            template: `<div>${this.buffer}</div>`
+          }
+        }
+      }
+    })
+  </script>
 </body>
+
 </html>
