@@ -94,13 +94,10 @@ namespace ByondLang.Interface.StateObjects
         public void write(JsValue val)
         {
             if (val.ValueType != JsValueType.String)
-                write(val.ConvertToString().ToString());
+                realWrite(val.ConvertToString().ToString());
             else
-                write(val.ToString());
+                realWrite(val.ToString());
         }
-
-        [JsCallable]
-        public void write(JsValue val, JsValue callback) => write(val, false, callback);
 
         [JsCallable]
         public void write(JsValue val, bool promt, JsValue callback)
@@ -109,10 +106,13 @@ namespace ByondLang.Interface.StateObjects
             if (promt)
                 topic = "?" + topic;
             if (val.ValueType != JsValueType.String)
-                write(val.ConvertToString().ToString(), topic);
+                realWrite(val.ConvertToString().ToString(), topic);
             else
-                write(val.ToString(), topic);
+                realWrite(val.ToString(), topic);
         }
+
+        [JsCallable]
+        public void write(JsValue val, JsValue callback) => write(val, false, callback);
 
         [JsCallable]
         public void print(JsValue val)
@@ -122,7 +122,7 @@ namespace ByondLang.Interface.StateObjects
             MoveDown();
         }
 
-        public void write(string str, string topic = null)
+        private void realWrite(string str, string topic = null)
         {
             foreach (char c in str)
             {
@@ -175,6 +175,18 @@ namespace ByondLang.Interface.StateObjects
         }
         [JsCallable]
         public void setTopic(int x, int y, int w, int h, JsValue callback) => setTopic(x, y, w, h, false, callback);
+
+        [JsCallable]
+        public void clearTopic(int x, int y, int w, int h)
+        {
+            for (int X = 0; X < w; X++)
+            {
+                for (int Y = 0; Y < h; Y++)
+                {
+                    SetTopic(x + X, y + Y, null);
+                }
+            }
+        }
 
         public string Stringify()
         {
@@ -302,8 +314,8 @@ namespace ByondLang.Interface.StateObjects
             var lastbgcolor = background;
             foreground = new Color(255, 0, 0);
             background = new Color(0, 0, 0);
-            write(ex.Message);
-            write("\r\n");
+            realWrite(ex.Message);
+            realWrite("\r\n");
             foreground = lastfgcolor;
             background = lastbgcolor;
         }

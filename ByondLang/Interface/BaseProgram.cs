@@ -42,7 +42,7 @@ namespace ByondLang.Interface
                 {
                     InstallInterfaces();
                 }
-            });
+            }, this, priority: JsTaskPriority.INITIALIZATION);
         }
 
         public void Dispose()
@@ -89,7 +89,7 @@ namespace ByondLang.Interface
             return false;
         }
 
-        public Task<JsValue> ExecuteScript(string script)
+        public JsTask<JsValue> ExecuteScript(string script)
         {
             return _runtime.TimedFunction(() =>
             {
@@ -97,7 +97,7 @@ namespace ByondLang.Interface
                 {
                     return JsContext.RunScript(script);
                 }
-            }, HandleException);
+            }, this, HandleException, JsTaskPriority.EXECUTION);
         }
     }
 }

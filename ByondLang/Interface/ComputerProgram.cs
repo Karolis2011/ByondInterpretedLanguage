@@ -22,7 +22,7 @@ namespace ByondLang.Interface
             return terminal.Stringify();
         }
 
-        public void HandleTopic(string hash, string data = "")
+        public void HandleTopic(string hash, string data)
         {
             if (!callbacks.ContainsKey(hash))
                 throw new Exception("Unknown callback.");
@@ -31,9 +31,10 @@ namespace ByondLang.Interface
             {
                 using (new JsContext.Scope(_context))
                 {
-                    callback.CallFunction(JsValue.GlobalObject, JsValue.FromString(data));
+                    JsValue callbackParam = data == null ? JsValue.Null : JsValue.FromString(data);
+                    callback.CallFunction(JsValue.GlobalObject, callbackParam);
                 }
-            }, HandleException);
+            }, this, HandleException, JsTaskPriority.CALLBACK);
         }
 
         internal override bool HandleException(Exception exception)

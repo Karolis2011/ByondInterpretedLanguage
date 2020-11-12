@@ -16,15 +16,13 @@ namespace ByondLang.Interface
         public const int DEFAULT_PROMISE_TIMEOUT = 2000;
         private JsRuntime runtime;
         private TypeMapper typeMapper = new TypeMapper();
-        private RuntimeTaskScheduler scheduler = new RuntimeTaskScheduler();
-        private TaskFactory factory;
+        private JsPFIFOScheduler scheduler = new JsPFIFOScheduler();
         private List<BaseProgram> programs = new List<BaseProgram>();
         private Dictionary<string, JsValue> callbacks = new Dictionary<string, JsValue>();
         internal IServiceProvider serviceProvider;
 
         public Runtime(IServiceProvider serviceProvider)
         {
-            factory = new TaskFactory(scheduler);
             runtime = JsRuntime.Create(JsRuntimeAttributes.AllowScriptInterrupt);
             this.serviceProvider = serviceProvider;
         }
@@ -40,8 +38,7 @@ namespace ByondLang.Interface
                     JsContext.SetPromiseContinuationCallback(PromiseContinuationCallback, IntPtr.Zero);
                 }
                 return context;
-            });
-            scheduler.PrioritizeTask(buildTask);
+            }, priority: JsTaskPriority.INITIALIZATION);
             var context = await buildTask;
             var program = initializer(this, context, typeMapper);
             program.InitializeState();
@@ -65,7 +62,7 @@ namespace ByondLang.Interface
                     task.CallFunction(JsValue.GlobalObject);
                 }
                 task.AddRef();
-            });
+            }, priority: JsTaskPriority.PROMISE);
         }
 
         private void TimedFn(int timeout, Action timedAction, Func<Exception, bool> exHandler)
@@ -89,9 +86,7 @@ namespace ByondLang.Interface
                 //}
                 catch (Exception ex)
                 {
-                    if (exHandler != null)
-                        exHandler(ex);
-                    else
+                    if (exHandler == null || !exHandler(ex))
                         throw;
                 }
             }
@@ -120,7 +115,7 @@ namespace ByondLang.Interface
                 //}
                 catch (Exception ex)
                 {
-                    if (exHandler?.Invoke(ex) != true)
+                    if (exHandler == null || !exHandler(ex))
                         throw;
                 }
 
@@ -129,12 +124,24 @@ namespace ByondLang.Interface
             return result;
         }
 
-        public Task TimedFunction(int timeout, Action function, Func<Exception, bool> exHandler = null) => factory.StartNew(() => TimedFn(timeout, function, exHandler));
-        public Task TimedFunction(Action function, Func<Exception, bool> exHandler = null) => TimedFunction(DEFAULT_SCRIPT_TIMEOUT, function, exHandler);
-        public Task Function(Action function) => factory.StartNew(function);
-        public Task<TResult> TimedFunction<TResult>(int timeout, Func<TResult> function, Func<Exception, bool> exHandler = null) => factory.StartNew(() => TimedFn(timeout, function, exHandler));
-        public Task<TResult> TimedFunction<TResult>(Func<TResult> function, Func<Exception, bool> exHandler = null) => TimedFunction(DEFAULT_SCRIPT_TIMEOUT, function, exHandler);
-        public Task<TResult> Function<TResult>(Func<TResult> function, Func<Exception, bool> exHandler = null) => factory.StartNew(function);
+
+        public JsTask TimedFunction(int timeout, Action function, BaseProgram program = null, Func<Exception, bool> exHandler = null, JsTaskPriority priority = JsTaskPriority.LOWEST) =>
+            scheduler.Run(() => TimedFn(timeout, function, exHandler), program, priority);
+
+        public JsTask TimedFunction(Action function, BaseProgram program = null, Func<Exception, bool> exHandler = null, JsTaskPriority priority = JsTaskPriority.EXECUTION) => 
+            TimedFunction(DEFAULT_SCRIPT_TIMEOUT, function, program, exHandler, priority);
+
+        public JsTask Function(Action function, BaseProgram program = null, JsTaskPriority priority = JsTaskPriority.EXECUTION) =>
+            scheduler.Run(function, program, priority);
+
+        public JsTask<TResult> TimedFunction<TResult>(int timeout, Func<TResult> function, BaseProgram program = null, Func<Exception, bool> exHandler = null, JsTaskPriority priority = JsTaskPriority.LOWEST) =>
+            scheduler.Run(() => TimedFn(timeout, function, exHandler), program, priority);
+
+        public JsTask<TResult> TimedFunction<TResult>(Func<TResult> function, BaseProgram program = null, Func<Exception, bool> exHandler = null, JsTaskPriority priority = JsTaskPriority.EXECUTION) => 
+            TimedFunction(DEFAULT_SCRIPT_TIMEOUT, function, program, exHandler, priority);
+
+        public JsTask<TResult> Function<TResult>(Func<TResult> function, BaseProgram program = null, JsTaskPriority priority = JsTaskPriority.EXECUTION) =>
+            scheduler.Run(function, program, priority);
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
@@ -145,7 +152,6 @@ namespace ByondLang.Interface
             {
                 if (disposing)
                 {
-                    factory = null;
                     typeMapper.Dispose();
                 }
                 var _programToDispose = programs.ToList();
