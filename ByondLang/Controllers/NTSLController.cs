@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
-using ByondLang.Interface;
 using ByondLang.Models;
 using ByondLang.Models.Request;
 using ByondLang.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace ByondLang.Controllers
@@ -14,12 +14,13 @@ namespace ByondLang.Controllers
     {
         NTSL3Service _newService;
         ILogger _log;
-        public NTSLController(NTSL3Service newService, ILogger<NTSLController> logger)
+        IConfiguration _config;
+        public NTSLController(NTSL3Service newService, ILogger<NTSLController> logger, IConfiguration configuration)
         {
             _newService = newService;
             _log = logger;
+            _config = configuration;
         }
-
 
         [HttpGet("/clear")]
         public int Clear()
@@ -29,20 +30,15 @@ namespace ByondLang.Controllers
         }
 
         [HttpGet("/new_program")]
-        public async Task<int> NewProgram([FromQuery] ProgramType type)
+        public int NewProgram([FromQuery] ProgramType type)
         {
-            return type switch
-            {
-                ProgramType.Computer => await _newService.NewProgram((r, c, m) => new ComputerProgram(r, c, m)),
-                ProgramType.TCom => await _newService.NewProgram((r, c, m) => new TComProgram(r, c, m)),
-                _ => throw new ArgumentOutOfRangeException(),
-            };
+            return _newService.NewProgram(PTypeToPType(type));
         }
 
         [HttpGet("/execute")]
-        public int Execute([FromQuery] int id, [FromQuery] string code = "")
+        public async Task<int> Execute([FromQuery] int id, [FromQuery] string code = "")
         {
-            _newService.Execute(id, code);
+            await _newService.Execute(id, code);
             return 1;
         }
 
@@ -53,20 +49,25 @@ namespace ByondLang.Controllers
             return 1;
         }
 
+
+        
         [HttpGet("/computer/get_buffer")]
-        public string GetBuffer([FromQuery] int id)
+        public async Task<string> GetBuffer([FromQuery] int id)
         {
-            var program = _newService.GetProgram<ComputerProgram>(id);
-            return program.GetTerminalBuffer();
+            return await _newService.GetProgram(id).GetBuffer();
         }
 
         [HttpGet("/computer/topic")]
-        public int TopicCall([FromQuery] int id, [FromQuery] string topic = "", [FromQuery] string data = "")
+        public async Task<int> TopicCall([FromQuery] int id, [FromQuery] string topic = "", [FromQuery] string data = "")
         {
-            var program = _newService.GetProgram<ComputerProgram>(id);
-            program.HandleTopic(topic, data);
+            var program = _newService.GetProgram(id);
+            await program.HandleTopic(topic, data);
             return 1;
         }
+
+
+
+        /*
 
         [HttpPost("/tcom/process")]
         public async Task<int> ProcessSignal(TComProcessRequest request)
@@ -82,11 +83,22 @@ namespace ByondLang.Controllers
             var program = _newService.GetProgram<TComProgram>(id);
             return program.GetSignals();
         }
+        */
 
         public enum ProgramType
         {
             Computer,
             TCom
+        }
+
+        private Api.ProgramType PTypeToPType(ProgramType type)
+        {
+            return type switch
+            {
+                ProgramType.Computer => Api.ProgramType.ComputerProgram,
+                ProgramType.TCom => Api.ProgramType.None, // TODO change this
+                _ => Api.ProgramType.None,
+            };
         }
     }
 }

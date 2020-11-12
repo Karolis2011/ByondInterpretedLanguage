@@ -20,13 +20,13 @@ namespace ByondLang.Interface
         private TaskFactory factory;
         private List<BaseProgram> programs = new List<BaseProgram>();
         private Dictionary<string, JsValue> callbacks = new Dictionary<string, JsValue>();
-        public readonly NTSL3Service Service;
+        internal IServiceProvider serviceProvider;
 
-        public Runtime(NTSL3Service service)
+        public Runtime(IServiceProvider serviceProvider)
         {
             factory = new TaskFactory(scheduler);
             runtime = JsRuntime.Create(JsRuntimeAttributes.AllowScriptInterrupt);
-            Service = service;
+            this.serviceProvider = serviceProvider;
         }
 
         public async Task<T> BuildContext<T>(Func<Runtime, JsContext, TypeMapper, T> initializer) where T : BaseProgram

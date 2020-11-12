@@ -1,5 +1,5 @@
-﻿using ByondLang.ChakraCore.Hosting;
-using ByondLang.Interface;
+﻿using ByondLang.Api;
+using ByondLang.ChakraCore.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,28 +9,25 @@ namespace ByondLang.Services
 {
     public class NTSL3Service
     {
-        Runtime runtime;
-        private readonly Dictionary<int, BaseProgram> programs = new Dictionary<int, BaseProgram>();
+        private readonly Dictionary<int, State.Program> programs = new Dictionary<int, State.Program>();
         private int lastId = 1;
-        public IServiceProvider serviceProvider; 
+        public IServiceProvider serviceProvider;
+        private int nextPort = 10000;
 
         public NTSL3Service(IServiceProvider services)
         {
             serviceProvider = services;
-            runtime = new Runtime(this);
-        }
-
-        ~NTSL3Service()
-        {
-            runtime.Dispose();
         }
 
         internal void Reset()
         {
-            runtime.Dispose();
-            runtime = new Runtime(this);
+            foreach (var program in programs)
+            {
+                program.Value.Dispose();
+            }
             programs.Clear();
             lastId = 1;
+            nextPort = 10000;
         }
 
         private int GenerateNewId()
@@ -38,34 +35,29 @@ namespace ByondLang.Services
             return lastId++;
         }
 
-        internal async Task<int> NewProgram<T>(Func<Runtime, JsContext, ChakraCore.TypeMapper, T> initializer) where T : BaseProgram
+        internal async Task Execute(int id, string code)
         {
-            var id = GenerateNewId();
-            var p = await runtime.BuildContext(initializer);
-            programs[id] = p;
-            return id;
+            await GetProgram(id).ExecuteScript(code);
         }
 
-        internal void Execute(int id, string code)
-        {
-            if (!programs.ContainsKey(id))
-                throw new ArgumentException("Provided ID is not found.");
-
-            GetProgram(id).ExecuteScript(code);
-        }
-
-        internal T GetProgram<T>(int id) where T : BaseProgram
+        internal State.Program GetProgram(int id)
         {
             if (!programs.ContainsKey(id))
                 throw new ArgumentException("Provided ID is not found.");
 
             var p = programs[id];
-            if (!(p is T))
-                throw new Exception("Invalid program Type.");
-            return (T)p;
+            return p;
         }
 
-        internal BaseProgram GetProgram(int id) => GetProgram<BaseProgram>(id);
+        internal int NewProgram(ProgramType programType)
+        {
+            var program = new State.Program();
+            var id = GenerateNewId();
+            program.Spawn(nextPort++);
+            programs.Add(id, program);
+            _ = program.InitializeProgram(programType);
+            return id;
+        }
 
         internal void Remove(int id)
         {

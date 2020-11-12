@@ -1,0 +1,43 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "ByondLang.Api";
+
+package program;
+
+enum ProgramType {
+  NONE = 0;
+  COMPUTER_PROGRAM = 1;
+}
+
+message VoidMessage {
+}
+
+message StatusResponse {
+  bool initialized = 1;
+  ProgramType type = 2;
+  TerminalState terminal = 3;
+}
+
+message StatusRequest {
+  bool initialize = 1;
+  ProgramType type = 2; 
+}
+
+message ExecuteRequest {
+  string code = 1;
+}
+
+message TopicRequest {
+  string topicId = 1;
+  string data = 2;
+}
+
+message TerminalState {
+  string buffer = 1;
+}
+
+service Program {
+  rpc status (StatusRequest) returns (StatusResponse);
+  rpc execute (ExecuteRequest) returns (VoidMessage);
+  rpc handleTopic (TopicRequest) returns (VoidMessage);
+}

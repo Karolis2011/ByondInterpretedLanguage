@@ -100,6 +100,21 @@ namespace ByondLang.Interface.StateObjects
         }
 
         [JsCallable]
+        public void write(JsValue val, JsValue callback) => write(val, false, callback);
+
+        [JsCallable]
+        public void write(JsValue val, bool promt, JsValue callback)
+        {
+            var topic = context.RegisterCallback(callback);
+            if (promt)
+                topic = "?" + topic;
+            if (val.ValueType != JsValueType.String)
+                write(val.ConvertToString().ToString(), topic);
+            else
+                write(val.ToString(), topic);
+        }
+
+        [JsCallable]
         public void print(JsValue val)
         {
             write(val);
@@ -107,7 +122,7 @@ namespace ByondLang.Interface.StateObjects
             MoveDown();
         }
 
-        public void write(string str)
+        public void write(string str, string topic = null)
         {
             foreach (char c in str)
             {
@@ -130,7 +145,7 @@ namespace ByondLang.Interface.StateObjects
                 {
                     lock (char_array)
                     {
-                        char_array[cursorY][cursorX] = new TerminalChar(c, background, foreground);
+                        char_array[cursorY][cursorX] = new TerminalChar(c, background, foreground, topic);
                     }
                     MoveRight();
                 }

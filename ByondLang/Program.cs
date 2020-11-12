@@ -13,6 +13,11 @@ namespace ByondLang
     {
         public static void Main(string[] args)
         {
+            if (args.Contains("--worker"))
+            {
+                CreateWorkerHostBuilder(args).Build().Run();
+                return;
+            }
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -23,7 +28,18 @@ namespace ByondLang
                     webBuilder.UseKestrel(options => {
                         options.Limits.MaxRequestLineSize = (int)Math.Pow(2, 16);
                     });
+                    webBuilder.UseUrls("http://localhost:1945");
                     webBuilder.UseStartup<Startup>();
+                });
+
+        public static IHostBuilder CreateWorkerHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseKestrel(options => {
+                        options.Limits.MaxRequestLineSize = (int)Math.Pow(2, 16);
+                    });
+                    webBuilder.UseStartup<WorkerStartup>();
                 });
     }
 }

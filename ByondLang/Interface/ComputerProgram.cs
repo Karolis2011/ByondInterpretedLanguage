@@ -9,7 +9,7 @@ namespace ByondLang.Interface
 {
     public class ComputerProgram : BaseProgram
     {
-        private Terminal terminal;
+        internal Terminal terminal;
         public string ComputerRef { get; private set; }
 
         public ComputerProgram(Runtime runtime, JsContext context, ChakraCore.TypeMapper typeMapper) : base(runtime, context, typeMapper)

@@ -31,7 +31,7 @@ namespace ByondLang.Interface
             _runtime = runtime;
             _context = context;
             _typeMapper = typeMapper;
-            logger = runtime.Service?.serviceProvider.GetService<ILogger<BaseProgram>>();
+            logger = runtime.serviceProvider.GetService<ILogger<BaseProgram>>();
         }
 
         public void InitializeState()
