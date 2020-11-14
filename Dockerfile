@@ -5,9 +5,11 @@ WORKDIR /app
 
 # Copy csproj and restore as distinct layers
 COPY ByondLang/ByondLang.csproj ./
+COPY ByondLang.Api/ByondLang.Api.csproj ./
 RUN dotnet restore
 
 COPY ./ByondLang ./
+COPY ./ByondLang.Api ./
 RUN dotnet publish -c Release -o out
 
 
