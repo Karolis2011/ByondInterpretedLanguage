@@ -4,12 +4,9 @@ FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
 WORKDIR /app
 
 # Copy csproj and restore as distinct layers
-COPY ByondLang/ByondLang.csproj ./
-COPY ByondLang.Api/ByondLang.Api.csproj ./
-RUN dotnet restore ByondLang.csproj
-
-COPY ./ByondLang ./
-COPY ./ByondLang.Api ./
+COPY . .
+RUN dotnet restore ". ByondLang/ByondLang.csproj"
+WORKDIR "/app/ByondLang"
 RUN dotnet publish ByondLang.csproj -c Release -o out
 
 
