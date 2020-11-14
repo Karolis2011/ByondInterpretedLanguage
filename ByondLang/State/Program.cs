@@ -40,12 +40,27 @@ namespace ByondLang.State
 
         public void Dispose()
         {
-            process?.Kill();
+            process?.Kill(true);
             process?.Dispose();
             channel?.Dispose();
         }
 
-        internal void Spawn(int port)
+        internal void Start(Func<int> portGenerator)
+        {
+            if(process != null)
+            {
+                if(process.HasExited)
+                {
+                    channel.Dispose();
+                    spawn(portGenerator());
+                }
+            } else
+            {
+                spawn(portGenerator());
+            }
+        }
+
+        private void spawn(int port)
         {
             var mp = Process.GetCurrentProcess();
 
@@ -66,6 +81,12 @@ namespace ByondLang.State
                 TopicId = topic,
                 Data = data
             });;
+        }
+
+        internal async Task Recycle()
+        {
+            await client.recycleAsync(new Api.VoidMessage());
+            lastStatus = null;
         }
     }
 }

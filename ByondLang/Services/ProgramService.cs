@@ -80,5 +80,12 @@ namespace ByondLang.Services
             return Task.FromResult(new VoidMessage());
         }
 
+        public override Task<VoidMessage> recycle(VoidMessage request, ServerCallContext context)
+        {
+            program.Dispose();
+            program = null;
+            type = ProgramType.None;
+            return Task.FromResult(request);
+        }
     }
 }

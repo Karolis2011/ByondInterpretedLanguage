@@ -13,6 +13,7 @@ namespace ByondLang.Services
         private int lastId = 1;
         public IServiceProvider serviceProvider;
         private int nextPort = 10000;
+        private readonly Queue<State.Program> recycledPrograms = new Queue<State.Program>();
 
         public NTSL3Service(IServiceProvider services)
         {
@@ -23,17 +24,16 @@ namespace ByondLang.Services
         {
             foreach (var program in programs)
             {
-                program.Value.Dispose();
+                _ = program.Value.Recycle();
+                recycledPrograms.Enqueue(program.Value);
             }
             programs.Clear();
             lastId = 1;
             nextPort = 10000;
         }
 
-        private int GenerateNewId()
-        {
-            return lastId++;
-        }
+        private int GenerateNewId() => lastId++;
+        private int GenerateNewPort() => nextPort++;
 
         internal async Task Execute(int id, string code)
         {
@@ -49,11 +49,25 @@ namespace ByondLang.Services
             return p;
         }
 
+        private State.Program obtainNewProgram()
+        {
+            if(recycledPrograms.Count > 0)
+            {
+                var p = recycledPrograms.Dequeue();
+                p.Start(GenerateNewPort);
+                return p;
+            } else
+            {
+                var p = new State.Program();
+                p.Start(GenerateNewPort);
+                return p;
+            }
+        }
+
         internal int NewProgram(ProgramType programType)
         {
-            var program = new State.Program();
+            var program = obtainNewProgram();
             var id = GenerateNewId();
-            program.Spawn(nextPort++);
             programs.Add(id, program);
             _ = program.InitializeProgram(programType);
             return id;
@@ -63,7 +77,9 @@ namespace ByondLang.Services
         {
             var p = GetProgram(id);
             programs.Remove(id);
-            p.Dispose();
+
+            _ = p.Recycle();
+            recycledPrograms.Enqueue(p);
         }
     }
 }

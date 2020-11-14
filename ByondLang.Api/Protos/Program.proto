@@ -37,6 +37,7 @@ message TerminalState {
 }
 
 service Program {
+  rpc recycle (VoidMessage) returns (VoidMessage);
   rpc status (StatusRequest) returns (StatusResponse);
   rpc execute (ExecuteRequest) returns (VoidMessage);
   rpc handleTopic (TopicRequest) returns (VoidMessage);
