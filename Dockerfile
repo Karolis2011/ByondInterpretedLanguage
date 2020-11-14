@@ -6,11 +6,11 @@ WORKDIR /app
 # Copy csproj and restore as distinct layers
 COPY ByondLang/ByondLang.csproj ./
 COPY ByondLang.Api/ByondLang.Api.csproj ./
-RUN dotnet restore
+RUN dotnet restore ByondLang.csproj
 
 COPY ./ByondLang ./
 COPY ./ByondLang.Api ./
-RUN dotnet publish -c Release -o out
+RUN dotnet publish ByondLang.csproj -c Release -o out
 
 
 # Build runtime image
