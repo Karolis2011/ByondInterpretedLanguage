@@ -1,19 +1,27 @@
 # SDK for building.
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
 
 WORKDIR /app
 
 # Copy csproj and restore as distinct layers
-COPY . .
-RUN dotnet restore ". ByondLang/ByondLang.csproj"
-WORKDIR "/app/ByondLang"
-RUN dotnet publish ByondLang.csproj -c Release -o out
+COPY *.sln .
+COPY ByondLang/*.csproj ./ByondLang/
+COPY ByondLang.Api/*.csproj ./ExByondLang.Api/
+
+RUN dotnet restore
+
+# copy everything else and build app
+COPY ByondLang/. ./ByondLang/
+COPY ByondLang.Api/. ./ExByondLang.Api/
+
+WORKDIR /app/ByondLang
+RUN dotnet publish -c Release -o out
 
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 AS runtime
 WORKDIR /app
-COPY --from=build-env /app/out .
+COPY --from=build- /app/ByondLang/out ./
 
 EXPOSE 1945
 
