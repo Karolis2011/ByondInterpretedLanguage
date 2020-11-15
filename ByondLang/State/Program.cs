@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
 using Grpc.Net.Client;
+using System.Net.Http;
 
 namespace ByondLang.State
 {
@@ -69,7 +70,12 @@ namespace ByondLang.State
             startInfo.UseShellExecute = false;
             process = Process.Start(startInfo);
 
-            channel = GrpcChannel.ForAddress($"https://localhost:{port}");
+            var httpHandler = new HttpClientHandler();
+            httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+
+            channel = GrpcChannel.ForAddress($"https://localhost:{port}", new GrpcChannelOptions() { 
+                HttpHandler = httpHandler
+            });
 
             client = new Api.Program.ProgramClient(channel);
         }

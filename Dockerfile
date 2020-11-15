@@ -25,4 +25,4 @@ COPY --from=build /app/ByondLang/out ./
 
 EXPOSE 1945
 
-ENTRYPOINT ["dotnet", "ByondLang.dll"]
+ENTRYPOINT ["./ByondLang"]
