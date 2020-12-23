@@ -23,6 +23,7 @@ namespace ByondLang
                     webBuilder.UseKestrel(options => {
                         options.Limits.MaxRequestLineSize = (int)Math.Pow(2, 16);
                     });
+                    webBuilder.UseUrls("http://localhost:1945");
                     webBuilder.UseStartup<Startup>();
                 });
     }
