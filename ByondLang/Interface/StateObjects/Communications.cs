@@ -12,7 +12,7 @@ namespace ByondLang.Interface.StateObjects
     [JsObject]
     public class Communications
     {
-        internal JsValue handler = JsValue.Invalid;
+        internal JsValueRaw handler = JsValueRaw.Invalid;
         private NTSL3Service service;
         private List<TComSignal> pendingSignals = new List<TComSignal>();
 
@@ -23,7 +23,7 @@ namespace ByondLang.Interface.StateObjects
         }
 
         [JsCallable]
-        public void setSignalHandler(JsValue handler)
+        public void setSignalHandler(JsValueRaw handler)
         {
             var type = handler.ValueType;
             if (type != JsValueType.Function && type != JsValueType.Null)
@@ -32,7 +32,7 @@ namespace ByondLang.Interface.StateObjects
                 this.handler.Release();
             if(type == JsValueType.Null)
             {
-                this.handler = JsValue.Invalid;
+                this.handler = JsValueRaw.Invalid;
                 return;
             }
             handler.AddRef();

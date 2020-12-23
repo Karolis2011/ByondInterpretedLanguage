@@ -22,7 +22,7 @@ namespace ByondLang.ChakraCore.Hosting
     /// <param name="handled">Boolean - false for promiseRejected: i.e. if the promise has just been rejected with no handler, 
     ///                         true for promiseHandled: i.e. if it was rejected before without a handler and is now being handled.</param>
     /// <param name="callbackState">The state passed to <c>JsSetHostPromiseRejectionTracker</c>.</param>
-    public delegate void JsHostPromiseRejectionTrackerCallback(JsValue promise, JsValue reason, [MarshalAs(UnmanagedType.U1)] bool handled, IntPtr callbackState);
+    public delegate void JsHostPromiseRejectionTrackerCallback(JsValueRaw promise, JsValueRaw reason, [MarshalAs(UnmanagedType.U1)] bool handled, IntPtr callbackState);
 
     // typedef void (CHAKRA_CALLBACK* JsHostPromiseRejectionTrackerCallback) (_In_ JsValueRef promise, _In_ JsValueRef reason, _In_ bool handled, _In_opt_ void* callbackState);
 

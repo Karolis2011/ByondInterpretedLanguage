@@ -14,7 +14,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// </summary>
         /// <param name="code">The error code returned.</param>
         /// <param name="error">The JavaScript error object.</param>
-        public JsScriptException(JsErrorCode code, JsValue error) :
+        public JsScriptException(JsErrorCode code, JsValueRaw error) :
             this(code, error, "Error")
         {
         }
@@ -25,7 +25,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="code">The error code returned.</param>
         /// <param name="error">The JavaScript error object.</param>
         /// <param name="message">The error message.</param>
-        public JsScriptException(JsErrorCode code, JsValue error, string message) :
+        public JsScriptException(JsErrorCode code, JsValueRaw error, string message) :
             base(code, message)
         {
             Error = error;
@@ -34,9 +34,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// <summary>
         ///     Gets a JavaScript object representing the script error.
         /// </summary>
-        public JsValue Error { get; }
+        public JsValueRaw Error { get; }
 
-        public static JsScriptException FromError(JsErrorCode code, JsValue error, string errorName)
+        public static JsScriptException FromError(JsErrorCode code, JsValueRaw error, string errorName)
         {
             var finalMessage = errorName;
             if(error.ValueType == JsValueType.Error)
@@ -49,13 +49,13 @@ namespace ByondLang.ChakraCore.Hosting
                 //var namesStr = st(names);
                 var includes = names.GetProperty("includes");
                 // {"description":"Expected ';'","message":"Expected ';'","line":5,"column":5,"length":4,"source":"This will error","url":""}
-                if (includes.CallFunction(names, JsValue.FromString("line")).ToBoolean())
+                if (includes.CallFunction(names, JsValueRaw.FromString("line")).ToBoolean())
                 {
                     var line = error.GetProperty("line").ToInt32();
                     var col = error.GetProperty("column").ToInt32();
                     lineInfo = $" ({line+1}, {col+1})";
                 }
-                if (includes.CallFunction(names, JsValue.FromString("stack")).ToBoolean())
+                if (includes.CallFunction(names, JsValueRaw.FromString("stack")).ToBoolean())
                 {
                     var a = error.GetProperty("stack");
                     if (a.ValueType == JsValueType.String)

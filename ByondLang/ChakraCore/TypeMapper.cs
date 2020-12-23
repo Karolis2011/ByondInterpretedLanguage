@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace ByondLang.ChakraCore
 {
+	[Obsolete]
     public class TypeMapper : IDisposable
     {
 		/// <summary>
@@ -52,18 +53,18 @@ namespace ByondLang.ChakraCore
 		/// </summary>
 		/// <param name="value">The source value</param>
 		/// <returns>The mapped value</returns>
-		public JsValue MapToScriptType(object value)
+		public JsValueRaw MapToScriptType(object value)
 		{
 
 			if (value == null)
-				return JsValue.Null;
+				return JsValueRaw.Null;
 
 			TypeCode typeCode = Type.GetTypeCode(value.GetType());
 
 			switch (typeCode)
 			{
 				case TypeCode.Boolean:
-					return (bool)value ? JsValue.True : JsValue.False;
+					return (bool)value ? JsValueRaw.True : JsValueRaw.False;
 
 				case TypeCode.SByte:
 				case TypeCode.Byte:
@@ -73,35 +74,35 @@ namespace ByondLang.ChakraCore
 				case TypeCode.UInt32:
 				case TypeCode.Int64:
 				case TypeCode.UInt64:
-					return JsValue.FromInt32(Convert.ToInt32(value));
+					return JsValueRaw.FromInt32(Convert.ToInt32(value));
 
 				case TypeCode.Single:
 				case TypeCode.Double:
 				case TypeCode.Decimal:
-					return JsValue.FromDouble(Convert.ToDouble(value));
+					return JsValueRaw.FromDouble(Convert.ToDouble(value));
 
 				case TypeCode.Char:
 				case TypeCode.String:
-					return JsValue.FromString((string)value);
+					return JsValueRaw.FromString((string)value);
 
 				default:
-					if (value is JsValue jsValue)
+					if (value is JsValueRaw jsValue)
 						return jsValue;
 					else
 						return GetOrCreateScriptObject(value);
 			}
 		}
 
-		public JsValue MapToScriptType(Delegate del) => MapToScriptType((object)del);
-		public JsValue MTS(Delegate del) => MapToScriptType((object)del);
-		public JsValue MTS(object value) => MapToScriptType(value);
+		public JsValueRaw MapToScriptType(Delegate del) => MapToScriptType((object)del);
+		public JsValueRaw MTS(Delegate del) => MapToScriptType((object)del);
+		public JsValueRaw MTS(object value) => MapToScriptType(value);
 
 		/// <summary>
 		/// Makes a mapping of value from the script type to a host type
 		/// </summary>
 		/// <param name="value">The source value</param>
 		/// <returns>The mapped value</returns>
-		public object MapToHostType(JsValue value)
+		public object MapToHostType(JsValueRaw value)
 		{
 			JsValueType valueType = value.ValueType;
 			object result = null;
@@ -127,7 +128,7 @@ namespace ByondLang.ChakraCore
 					JsPropertyId externalObjectPropertyId = JsPropertyId.FromString(ExternalObjectPropertyName);
 					if (value.HasProperty(externalObjectPropertyId))
 					{
-						JsValue externalObjectValue = value.GetProperty(externalObjectPropertyId);
+						JsValueRaw externalObjectValue = value.GetProperty(externalObjectPropertyId);
 						result = externalObjectValue.HasExternalData ?
 							GCHandle.FromIntPtr(externalObjectValue.ExternalData).Target : null;
 					}
@@ -150,7 +151,7 @@ namespace ByondLang.ChakraCore
 
 			return result;
 		}
-		public object MTH(JsValue value) => MapToHostType(value);
+		public object MTH(JsValueRaw value) => MapToHostType(value);
 
 
 		/// <summary>
@@ -158,7 +159,7 @@ namespace ByondLang.ChakraCore
 		/// </summary>
 		/// <param name="obj">Instance of host type</param>
 		/// <returns>JavaScript value created from an host object</returns>
-		public JsValue GetOrCreateScriptObject(object obj)
+		public JsValueRaw GetOrCreateScriptObject(object obj)
 		{
 			if (!_embeddedObjectStorageInitialized)
 			{
@@ -200,7 +201,7 @@ namespace ByondLang.ChakraCore
 		{
 			GCHandle objHandle = GCHandle.Alloc(obj);
 			IntPtr objPtr = GCHandle.ToIntPtr(objHandle);
-			JsValue objValue = JsValue.CreateExternalObject(objPtr, _embeddedObjectFinalizeCallback);
+			JsValueRaw objValue = JsValueRaw.CreateExternalObject(objPtr, _embeddedObjectFinalizeCallback);
 
 			var embeddedObject = new EmbeddedObject(obj, objValue);
 			var embeddingOptions = GetEmbeddingObjectOptions(obj);
@@ -218,7 +219,7 @@ namespace ByondLang.ChakraCore
 		{
 			Type type = externalItem.HostType;
 			object obj = externalItem.HostObject;
-			JsValue typeValue = externalItem.ScriptValue;
+			JsValueRaw typeValue = externalItem.ScriptValue;
 			bool instance = externalItem.IsInstance;
 			IList<JsNativeFunction> nativeFunctions = externalItem.NativeFunctions;
 
@@ -230,15 +231,15 @@ namespace ByondLang.ChakraCore
 			{
 				string fieldName = field.Name;
 
-				JsValue descriptorValue = JsValue.CreateObject();
-				descriptorValue.SetProperty("enumerable", JsValue.True, true);
+				JsValueRaw descriptorValue = JsValueRaw.CreateObject();
+				descriptorValue.SetProperty("enumerable", JsValueRaw.True, true);
 
-                JsValue nativeGetFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
+                JsValueRaw nativeGetFunction(JsValueRaw callee, bool isConstructCall, JsValueRaw[] args, ushort argCount, IntPtr callbackData)
                 {
                     if (instance && obj == null)
                     {
                         CreateAndSetError($"Context error while invoking getter '{fieldName}'.");
-                        return JsValue.Undefined; ;
+                        return JsValueRaw.Undefined; ;
                     }
                     object result;
 
@@ -250,7 +251,7 @@ namespace ByondLang.ChakraCore
                     {
                         Exception exception = UnwrapException(e);
                         var wrapperException = exception as JsException;
-                        JsValue errorValue;
+                        JsValueRaw errorValue;
 
                         if (wrapperException != null)
                         {
@@ -263,28 +264,28 @@ namespace ByondLang.ChakraCore
                                 :
                                 $"Erorr ocured while reading static field '{fieldName}' from type '{typeName}': {exception.Message}"
                                 ;
-                            errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+                            errorValue = JsValueRaw.CreateError(JsValueRaw.FromString(errorMessage));
                         }
                         JsContext.SetException(errorValue);
 
-                        return JsValue.Undefined;
+                        return JsValueRaw.Undefined;
                     }
 
-                    JsValue resultValue = MapToScriptType(result);
+                    JsValueRaw resultValue = MapToScriptType(result);
 
                     return resultValue;
                 }
                 nativeFunctions.Add(nativeGetFunction);
 
-				JsValue getMethodValue = JsValue.CreateFunction(nativeGetFunction);
+				JsValueRaw getMethodValue = JsValueRaw.CreateFunction(nativeGetFunction);
 				descriptorValue.SetProperty("get", getMethodValue, true);
 
-                JsValue nativeSetFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
+                JsValueRaw nativeSetFunction(JsValueRaw callee, bool isConstructCall, JsValueRaw[] args, ushort argCount, IntPtr callbackData)
                 {
                     if (instance && obj == null)
                     {
                         CreateAndSetError($"Invalid context got host object field {fieldName}.");
-                        return JsValue.Undefined;
+                        return JsValueRaw.Undefined;
                     }
 
                     object value = MapToHostType(args[1]);
@@ -298,7 +299,7 @@ namespace ByondLang.ChakraCore
                     {
                         Exception exception = UnwrapException(e);
                         var wrapperException = exception as JsException;
-                        JsValue errorValue;
+                        JsValueRaw errorValue;
 
                         if (wrapperException != null)
                         {
@@ -311,18 +312,18 @@ namespace ByondLang.ChakraCore
                                 :
                                 $"Failed to set value for static type '{typeName}' field '{fieldName}': {exception.Message}"
                                 ;
-                            errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+                            errorValue = JsValueRaw.CreateError(JsValueRaw.FromString(errorMessage));
                         }
                         JsContext.SetException(errorValue);
 
-                        return JsValue.Undefined;
+                        return JsValueRaw.Undefined;
                     }
 
-                    return JsValue.Undefined;
+                    return JsValueRaw.Undefined;
                 }
                 nativeFunctions.Add(nativeSetFunction);
 
-				JsValue setMethodValue = JsValue.CreateFunction(nativeSetFunction);
+				JsValueRaw setMethodValue = JsValueRaw.CreateFunction(nativeSetFunction);
 				descriptorValue.SetProperty("set", setMethodValue, true);
 
 				typeValue.DefineProperty(fieldName, descriptorValue);
@@ -333,7 +334,7 @@ namespace ByondLang.ChakraCore
 		{
 			Type type = externalItem.HostType;
 			object obj = externalItem.HostObject;
-			JsValue typeValue = externalItem.ScriptValue;
+			JsValueRaw typeValue = externalItem.ScriptValue;
 			IList<JsNativeFunction> nativeFunctions = externalItem.NativeFunctions;
 			bool instance = externalItem.IsInstance;
 
@@ -345,17 +346,17 @@ namespace ByondLang.ChakraCore
 			{
 				string propertyName = property.Name;
 
-				JsValue descriptorValue = JsValue.CreateObject();
-				descriptorValue.SetProperty("enumerable", JsValue.True, true);
+				JsValueRaw descriptorValue = JsValueRaw.CreateObject();
+				descriptorValue.SetProperty("enumerable", JsValueRaw.True, true);
 
 				if (property.GetGetMethod() != null)
 				{
-                    JsValue nativeGetFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
+                    JsValueRaw nativeGetFunction(JsValueRaw callee, bool isConstructCall, JsValueRaw[] args, ushort argCount, IntPtr callbackData)
                     {
                         if (instance && obj == null)
                         {
                             CreateAndSetError($"Invalid context for '{propertyName}' property.");
-                            return JsValue.Undefined;
+                            return JsValueRaw.Undefined;
                         }
 
                         object result;
@@ -368,7 +369,7 @@ namespace ByondLang.ChakraCore
                         {
                             Exception exception = UnwrapException(e);
                             var wrapperException = exception as JsException;
-                            JsValue errorValue;
+                            JsValueRaw errorValue;
 
                             if (wrapperException != null)
                             {
@@ -381,28 +382,28 @@ namespace ByondLang.ChakraCore
                                     :
                                     $"Property '{propertyName}' of static type '{typeName}' get operation failed: {exception.Message}"
                                     ;
-                                errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+                                errorValue = JsValueRaw.CreateError(JsValueRaw.FromString(errorMessage));
                             }
                             JsContext.SetException(errorValue);
 
-                            return JsValue.Undefined;
+                            return JsValueRaw.Undefined;
                         }
 
-                        JsValue resultValue = MapToScriptType(result);
+                        JsValueRaw resultValue = MapToScriptType(result);
 
                         return resultValue;
                     }
                     nativeFunctions.Add(nativeGetFunction);
 
-					JsValue getMethodValue = JsValue.CreateFunction(nativeGetFunction);
+					JsValueRaw getMethodValue = JsValueRaw.CreateFunction(nativeGetFunction);
 					descriptorValue.SetProperty("get", getMethodValue, true);
 				}
 
 				if (property.GetSetMethod() != null)
 				{
-                    JsValue nativeSetFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
+                    JsValueRaw nativeSetFunction(JsValueRaw callee, bool isConstructCall, JsValueRaw[] args, ushort argCount, IntPtr callbackData)
                     {
-                        JsValue undefinedValue = JsValue.Undefined;
+                        JsValueRaw undefinedValue = JsValueRaw.Undefined;
 
                         if (instance && obj == null)
                         {
@@ -421,7 +422,7 @@ namespace ByondLang.ChakraCore
                         {
                             Exception exception = UnwrapException(e);
                             var wrapperException = exception as JsException;
-                            JsValue errorValue;
+                            JsValueRaw errorValue;
 
                             if (wrapperException != null)
                             {
@@ -434,7 +435,7 @@ namespace ByondLang.ChakraCore
                                     :
                                     $"Host type '{typeName}' property '{propertyName}' setting failed: {exception.Message}"
                                     ;
-                                errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+                                errorValue = JsValueRaw.CreateError(JsValueRaw.FromString(errorMessage));
                             }
                             JsContext.SetException(errorValue);
 
@@ -445,7 +446,7 @@ namespace ByondLang.ChakraCore
                     }
                     nativeFunctions.Add(nativeSetFunction);
 
-					JsValue setMethodValue = JsValue.CreateFunction(nativeSetFunction);
+					JsValueRaw setMethodValue = JsValueRaw.CreateFunction(nativeSetFunction);
 					descriptorValue.SetProperty("set", setMethodValue, true);
 				}
 
@@ -457,7 +458,7 @@ namespace ByondLang.ChakraCore
 		{
 			Type type = externalItem.HostType;
 			object obj = externalItem.HostObject;
-			JsValue typeValue = externalItem.ScriptValue;
+			JsValueRaw typeValue = externalItem.ScriptValue;
 			IList<JsNativeFunction> nativeFunctions = externalItem.NativeFunctions;
 			bool instance = externalItem.IsInstance;
 
@@ -472,18 +473,18 @@ namespace ByondLang.ChakraCore
 				string methodName = methodGroup.Key;
 				MethodInfo[] methodCandidates = methodGroup.Select(m => m.Info).ToArray();
 
-                JsValue nativeFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
+                JsValueRaw nativeFunction(JsValueRaw callee, bool isConstructCall, JsValueRaw[] args, ushort argCount, IntPtr callbackData)
                 {
                     if (instance && obj == null)
                     {
                         CreateAndSetError($"Invalid context while calling method '{methodName}'.");
-                        return JsValue.Undefined;
+                        return JsValueRaw.Undefined;
                     }
 
                     if (!SelectAndProcessFunction(methodCandidates, args, argCount, out MethodInfo bestSelection, out object[] processedArgs))
                     {
                         CreateAndSetError($"Suitable method '{methodName}' was not found.");
-                        return JsValue.Undefined;
+                        return JsValueRaw.Undefined;
                     }
 
                     object result;
@@ -496,7 +497,7 @@ namespace ByondLang.ChakraCore
                     {
                         Exception exception = UnwrapException(e);
                         var wrapperException = exception as JsException;
-                        JsValue errorValue;
+                        JsValueRaw errorValue;
 
                         if (wrapperException != null)
                         {
@@ -509,20 +510,20 @@ namespace ByondLang.ChakraCore
                                 :
                                 $"Host static type '{typeName}' method '{methodName}' invocation error: {exception.Message}"
                                 ;
-                            errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+                            errorValue = JsValueRaw.CreateError(JsValueRaw.FromString(errorMessage));
                         }
                         JsContext.SetException(errorValue);
 
-                        return JsValue.Undefined;
+                        return JsValueRaw.Undefined;
                     }
 
-                    JsValue resultValue = MapToScriptType(result);
+                    JsValueRaw resultValue = MapToScriptType(result);
 
                     return resultValue;
                 }
                 nativeFunctions.Add(nativeFunction);
 
-				JsValue methodValue = JsValue.CreateNamedFunction(methodName, nativeFunction);
+				JsValueRaw methodValue = JsValueRaw.CreateNamedFunction(methodName, nativeFunction);
 				typeValue.SetProperty(methodName, methodValue, true);
 			}
 		}
@@ -534,7 +535,7 @@ namespace ByondLang.ChakraCore
 
 		private EmbeddedObject CreateEmbeddedFunction(Delegate del)
 		{
-            JsValue nativeFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
+            JsValueRaw nativeFunction(JsValueRaw callee, bool isConstructCall, JsValueRaw[] args, ushort argCount, IntPtr callbackData)
             {
                 var methodInfo = del.GetMethodInfo();
                 var parameters = methodInfo.GetParameters();
@@ -556,29 +557,29 @@ namespace ByondLang.ChakraCore
                 }
                 catch (Exception e)
                 {
-                    JsValue undefinedValue = JsValue.Undefined;
+                    JsValueRaw undefinedValue = JsValueRaw.Undefined;
                     Exception exception = UnwrapException(e);
                     var wrapperException = exception as JsException;
-                    JsValue errorValue = wrapperException != null ?
+                    JsValueRaw errorValue = wrapperException != null ?
                         CreateErrorFromWrapperException(wrapperException)
                         :
-                        JsValue.CreateError(JsValue.FromString($"Host delegate invocation error: {exception.Message}"));
+                        JsValueRaw.CreateError(JsValueRaw.FromString($"Host delegate invocation error: {exception.Message}"));
                     ;
                     JsContext.SetException(errorValue);
 
                     return undefinedValue;
                 }
 
-                JsValue resultValue = MapToScriptType(result);
+                JsValueRaw resultValue = MapToScriptType(result);
 
                 return resultValue;
             }
 
             GCHandle delHandle = GCHandle.Alloc(del);
 			IntPtr delPtr = GCHandle.ToIntPtr(delHandle);
-			JsValue objValue = JsValue.CreateExternalObject(delPtr, _embeddedObjectFinalizeCallback);
+			JsValueRaw objValue = JsValueRaw.CreateExternalObject(delPtr, _embeddedObjectFinalizeCallback);
 
-			JsValue functionValue = JsValue.CreateFunction(nativeFunction);
+			JsValueRaw functionValue = JsValueRaw.CreateFunction(nativeFunction);
 			SetNonEnumerableProperty(functionValue, ExternalObjectPropertyName, objValue);
 
 			var embeddedObject = new EmbeddedObject(del, functionValue,
@@ -589,7 +590,7 @@ namespace ByondLang.ChakraCore
 
 		private EmbeddedObject CreateEmbeddedFunction(Delegate[] del)
 		{
-            JsValue nativeFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
+            JsValueRaw nativeFunction(JsValueRaw callee, bool isConstructCall, JsValueRaw[] args, ushort argCount, IntPtr callbackData)
             {
                 if (!SelectAndProcessFunction(del, args, argCount, out Delegate selection, out object[] processedArgs))
                 {
@@ -604,29 +605,29 @@ namespace ByondLang.ChakraCore
                 }
                 catch (Exception e)
                 {
-                    JsValue undefinedValue = JsValue.Undefined;
+                    JsValueRaw undefinedValue = JsValueRaw.Undefined;
                     Exception exception = UnwrapException(e);
                     var wrapperException = exception as JsException;
-                    JsValue errorValue = wrapperException != null ?
+                    JsValueRaw errorValue = wrapperException != null ?
                         CreateErrorFromWrapperException(wrapperException)
                         :
-                        JsValue.CreateError(JsValue.FromString($"Host delegate invocation error: {exception.Message}"));
+                        JsValueRaw.CreateError(JsValueRaw.FromString($"Host delegate invocation error: {exception.Message}"));
                     ;
                     JsContext.SetException(errorValue);
 
                     return undefinedValue;
                 }
 
-                JsValue resultValue = MapToScriptType(result);
+                JsValueRaw resultValue = MapToScriptType(result);
 
                 return resultValue;
             }
 
             GCHandle delHandle = GCHandle.Alloc(del);
 			IntPtr delPtr = GCHandle.ToIntPtr(delHandle);
-			JsValue objValue = JsValue.CreateExternalObject(delPtr, _embeddedObjectFinalizeCallback);
+			JsValueRaw objValue = JsValueRaw.CreateExternalObject(delPtr, _embeddedObjectFinalizeCallback);
 
-			JsValue functionValue = JsValue.CreateFunction(nativeFunction);
+			JsValueRaw functionValue = JsValueRaw.CreateFunction(nativeFunction);
 			SetNonEnumerableProperty(functionValue, ExternalObjectPropertyName, objValue);
 
 			var embeddedObject = new EmbeddedObject(del, functionValue,
@@ -635,7 +636,7 @@ namespace ByondLang.ChakraCore
 			return embeddedObject;
 		}
 
-		private bool SelectAndProcessFunction(Delegate[] funs, JsValue[] args, ushort argscount, out Delegate selection, out object[] processedArgs)
+		private bool SelectAndProcessFunction(Delegate[] funs, JsValueRaw[] args, ushort argscount, out Delegate selection, out object[] processedArgs)
 		{
 			selection = null;
 			processedArgs = null;
@@ -654,7 +655,7 @@ namespace ByondLang.ChakraCore
 			return ProcessFunction(candidite.paramInfo, candidite.types, args, argscount, out processedArgs);
 		}
 
-		private bool SelectAndProcessFunction(MethodInfo[] funs, JsValue[] args, ushort argscount, out MethodInfo selection, out object[] processedArgs)
+		private bool SelectAndProcessFunction(MethodInfo[] funs, JsValueRaw[] args, ushort argscount, out MethodInfo selection, out object[] processedArgs)
 		{
 			selection = null;
 			processedArgs = null;
@@ -672,7 +673,7 @@ namespace ByondLang.ChakraCore
 			return ProcessFunction(candidite.paramInfo, candidite.types, args, argscount, out processedArgs);
 		}
 
-		private bool ProcessFunction(ParameterInfo[] parameterInfos, ParameterType[] parameterTypes, JsValue[] args,  ushort argscount, out object[] processedArgs)
+		private bool ProcessFunction(ParameterInfo[] parameterInfos, ParameterType[] parameterTypes, JsValueRaw[] args,  ushort argscount, out object[] processedArgs)
 		{
 			processedArgs = new object[parameterInfos.Length];
 			int aPos = 1;
@@ -708,7 +709,7 @@ namespace ByondLang.ChakraCore
 						aPos++;
 						break;
 					case ParameterType.GLOB:
-						processedArgs[i] = JsValue.GlobalObject;
+						processedArgs[i] = JsValueRaw.GlobalObject;
 						break;
 					case ParameterType.This:
 						processedArgs[i] = args[0];
@@ -739,7 +740,7 @@ namespace ByondLang.ChakraCore
 					parameterTypes[i] = ParameterType.InjectMeta;
 					continue;
 				}
-				if (param.ParameterType == typeof(JsValue))
+				if (param.ParameterType == typeof(JsValueRaw))
 				{
 					if (param.GetCustomAttribute<GlobalStateAttribute>() != null)
 					{
@@ -836,11 +837,11 @@ namespace ByondLang.ChakraCore
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void SetNonEnumerableProperty(JsValue objValue, string name, JsValue value)
+		private static void SetNonEnumerableProperty(JsValueRaw objValue, string name, JsValueRaw value)
 		{
-			JsValue descriptorValue = JsValue.CreateObject();
-			descriptorValue.SetProperty("enumerable", JsValue.False, true);
-			descriptorValue.SetProperty("writable", JsValue.True, true);
+			JsValueRaw descriptorValue = JsValueRaw.CreateObject();
+			descriptorValue.SetProperty("enumerable", JsValueRaw.False, true);
+			descriptorValue.SetProperty("writable", JsValueRaw.True, true);
 
 			JsPropertyId id = JsPropertyId.FromString(name);
 			objValue.DefineProperty(id, descriptorValue);
@@ -850,19 +851,19 @@ namespace ByondLang.ChakraCore
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void CreateAndSetError(string message)
 		{
-			JsValue errorValue = JsValue.CreateError(JsValue.FromString(message));
+			JsValueRaw errorValue = JsValueRaw.CreateError(JsValueRaw.FromString(message));
 			JsContext.SetException(errorValue);
 		}
 
-		private static JsValue CreateErrorFromWrapperException(JsException exception)
+		private static JsValueRaw CreateErrorFromWrapperException(JsException exception)
 		{
 			var originalException = exception.InnerException as JsException;
 			JsErrorCode errorCode = originalException != null ?
 				originalException.ErrorCode : JsErrorCode.NoError;
 			var description = Enum.GetName(typeof(JsErrorCode), errorCode);
 
-			JsValue innerErrorValue = JsValue.CreateError(JsValue.FromString(description));
-			innerErrorValue.SetProperty("description", JsValue.FromString(description), true);
+			JsValueRaw innerErrorValue = JsValueRaw.CreateError(JsValueRaw.FromString(description));
+			innerErrorValue.SetProperty("description", JsValueRaw.FromString(description), true);
 
 			/*
 
@@ -918,16 +919,16 @@ namespace ByondLang.ChakraCore
 
 			innerErrorValue.SetProperty("metadata", metadataValue, true);
 			*/
-			JsValue errorValue = JsValue.CreateError(JsValue.FromString(description));
+			JsValueRaw errorValue = JsValueRaw.CreateError(JsValueRaw.FromString(description));
 			errorValue.SetProperty("innerException", innerErrorValue, true);
 
 			return errorValue;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void FreezeObject(JsValue objValue)
+		private static void FreezeObject(JsValueRaw objValue)
 		{
-			JsValue freezeMethodValue = JsValue.GlobalObject
+			JsValueRaw freezeMethodValue = JsValueRaw.GlobalObject
 				.GetProperty("Object")
 				.GetProperty("freeze");
 			freezeMethodValue.CallFunction(objValue);

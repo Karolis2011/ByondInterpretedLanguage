@@ -80,7 +80,7 @@ namespace ByondLang.ChakraCore.Hosting
 
                     case JsErrorCode.ScriptException:
                         {
-                            JsErrorCode innerError = JsGetAndClearException(out JsValue errorObject);
+                            JsErrorCode innerError = JsGetAndClearException(out JsValueRaw errorObject);
 
                             if (innerError != JsErrorCode.NoError)
                             {
@@ -91,7 +91,7 @@ namespace ByondLang.ChakraCore.Hosting
 
                     case JsErrorCode.ScriptCompile:
                         {
-                            JsErrorCode innerError = JsGetAndClearException(out JsValue errorObject);
+                            JsErrorCode innerError = JsGetAndClearException(out JsValueRaw errorObject);
 
                             if (innerError != JsErrorCode.NoError)
                             {
@@ -101,10 +101,10 @@ namespace ByondLang.ChakraCore.Hosting
                         }
 
                     case JsErrorCode.ScriptTerminated:
-                        throw new JsScriptException(error, JsValue.Invalid, "Script was terminated.");
+                        throw new JsScriptException(error, JsValueRaw.Invalid, "Script was terminated.");
 
                     case JsErrorCode.ScriptEvalDisabled:
-                        throw new JsScriptException(error, JsValue.Invalid, "Eval of strings is disabled in this runtime.");
+                        throw new JsScriptException(error, JsValueRaw.Invalid, "Eval of strings is disabled in this runtime.");
 
                     case JsErrorCode.Fatal:
                         throw new JsFatalException(error);
@@ -145,13 +145,13 @@ namespace ByondLang.ChakraCore.Hosting
         internal static extern JsErrorCode JsContextAddRef(JsContext reference, out uint count);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsAddRef(JsValue reference, out uint count);
+        internal static extern JsErrorCode JsAddRef(JsValueRaw reference, out uint count);
 
         [DllImport(DllName, EntryPoint = "JsRelease")]
         internal static extern JsErrorCode JsContextRelease(JsContext reference, out uint count);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsRelease(JsValue reference, out uint count);
+        internal static extern JsErrorCode JsRelease(JsValueRaw reference, out uint count);
 
         [DllImport(DllName)]
         internal static extern JsErrorCode JsCreateContext(JsRuntime runtime, out JsContext newContext);
@@ -177,163 +177,163 @@ namespace ByondLang.ChakraCore.Hosting
         internal static extern JsErrorCode JsGetPropertyNameFromId(JsPropertyId propertyId, out string name);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetUndefinedValue(out JsValue undefinedValue);
+        internal static extern JsErrorCode JsGetUndefinedValue(out JsValueRaw undefinedValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetNullValue(out JsValue nullValue);
+        internal static extern JsErrorCode JsGetNullValue(out JsValueRaw nullValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetTrueValue(out JsValue trueValue);
+        internal static extern JsErrorCode JsGetTrueValue(out JsValueRaw trueValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetFalseValue(out JsValue falseValue);
+        internal static extern JsErrorCode JsGetFalseValue(out JsValueRaw falseValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsBoolToBoolean(bool value, out JsValue booleanValue);
+        internal static extern JsErrorCode JsBoolToBoolean(bool value, out JsValueRaw booleanValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsBooleanToBool(JsValue booleanValue, out bool boolValue);
+        internal static extern JsErrorCode JsBooleanToBool(JsValueRaw booleanValue, out bool boolValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsConvertValueToBoolean(JsValue value, out JsValue booleanValue);
+        internal static extern JsErrorCode JsConvertValueToBoolean(JsValueRaw value, out JsValueRaw booleanValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetValueType(JsValue value, out JsValueType type);
+        internal static extern JsErrorCode JsGetValueType(JsValueRaw value, out JsValueType type);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsDoubleToNumber(double doubleValue, out JsValue value);
+        internal static extern JsErrorCode JsDoubleToNumber(double doubleValue, out JsValueRaw value);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsIntToNumber(int intValue, out JsValue value);
+        internal static extern JsErrorCode JsIntToNumber(int intValue, out JsValueRaw value);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsNumberToDouble(JsValue value, out double doubleValue);
+        internal static extern JsErrorCode JsNumberToDouble(JsValueRaw value, out double doubleValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsConvertValueToNumber(JsValue value, out JsValue numberValue);
+        internal static extern JsErrorCode JsConvertValueToNumber(JsValueRaw value, out JsValueRaw numberValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetStringLength(JsValue sringValue, out int length);
+        internal static extern JsErrorCode JsGetStringLength(JsValueRaw sringValue, out int length);
 
         [DllImport(DllName, CharSet = CharSet.Unicode)]
-        internal static extern JsErrorCode JsPointerToString(string value, UIntPtr stringLength, out JsValue stringValue);
+        internal static extern JsErrorCode JsPointerToString(string value, UIntPtr stringLength, out JsValueRaw stringValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsStringToPointer(JsValue value, out IntPtr stringValue, out UIntPtr stringLength);
+        internal static extern JsErrorCode JsStringToPointer(JsValueRaw value, out IntPtr stringValue, out UIntPtr stringLength);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsConvertValueToString(JsValue value, out JsValue stringValue);
+        internal static extern JsErrorCode JsConvertValueToString(JsValueRaw value, out JsValueRaw stringValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetGlobalObject(out JsValue globalObject);
+        internal static extern JsErrorCode JsGetGlobalObject(out JsValueRaw globalObject);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateObject(out JsValue obj);
+        internal static extern JsErrorCode JsCreateObject(out JsValueRaw obj);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateExternalObject(IntPtr data, JsFinalizeCallback finalizeCallback, out JsValue obj);
+        internal static extern JsErrorCode JsCreateExternalObject(IntPtr data, JsFinalizeCallback finalizeCallback, out JsValueRaw obj);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsConvertValueToObject(JsValue value, out JsValue obj);
+        internal static extern JsErrorCode JsConvertValueToObject(JsValueRaw value, out JsValueRaw obj);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetPrototype(JsValue obj, out JsValue prototypeObject);
+        internal static extern JsErrorCode JsGetPrototype(JsValueRaw obj, out JsValueRaw prototypeObject);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsSetPrototype(JsValue obj, JsValue prototypeObject);
+        internal static extern JsErrorCode JsSetPrototype(JsValueRaw obj, JsValueRaw prototypeObject);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetExtensionAllowed(JsValue obj, out bool value);
+        internal static extern JsErrorCode JsGetExtensionAllowed(JsValueRaw obj, out bool value);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsPreventExtension(JsValue obj);
+        internal static extern JsErrorCode JsPreventExtension(JsValueRaw obj);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetProperty(JsValue obj, JsPropertyId propertyId, out JsValue value);
+        internal static extern JsErrorCode JsGetProperty(JsValueRaw obj, JsPropertyId propertyId, out JsValueRaw value);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetOwnPropertyDescriptor(JsValue obj, JsPropertyId propertyId, out JsValue propertyDescriptor);
+        internal static extern JsErrorCode JsGetOwnPropertyDescriptor(JsValueRaw obj, JsPropertyId propertyId, out JsValueRaw propertyDescriptor);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetOwnPropertyNames(JsValue obj, out JsValue propertyNames);
+        internal static extern JsErrorCode JsGetOwnPropertyNames(JsValueRaw obj, out JsValueRaw propertyNames);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsSetProperty(JsValue obj, JsPropertyId propertyId, JsValue value, bool useStrictRules);
+        internal static extern JsErrorCode JsSetProperty(JsValueRaw obj, JsPropertyId propertyId, JsValueRaw value, bool useStrictRules);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsHasProperty(JsValue obj, JsPropertyId propertyId, out bool hasProperty);
+        internal static extern JsErrorCode JsHasProperty(JsValueRaw obj, JsPropertyId propertyId, out bool hasProperty);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsDeleteProperty(JsValue obj, JsPropertyId propertyId, bool useStrictRules, out JsValue result);
+        internal static extern JsErrorCode JsDeleteProperty(JsValueRaw obj, JsPropertyId propertyId, bool useStrictRules, out JsValueRaw result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsDefineProperty(JsValue obj, JsPropertyId propertyId, JsValue propertyDescriptor, out bool result);
+        internal static extern JsErrorCode JsDefineProperty(JsValueRaw obj, JsPropertyId propertyId, JsValueRaw propertyDescriptor, out bool result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsHasIndexedProperty(JsValue obj, JsValue index, out bool result);
+        internal static extern JsErrorCode JsHasIndexedProperty(JsValueRaw obj, JsValueRaw index, out bool result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetIndexedProperty(JsValue obj, JsValue index, out JsValue result);
+        internal static extern JsErrorCode JsGetIndexedProperty(JsValueRaw obj, JsValueRaw index, out JsValueRaw result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsSetIndexedProperty(JsValue obj, JsValue index, JsValue value);
+        internal static extern JsErrorCode JsSetIndexedProperty(JsValueRaw obj, JsValueRaw index, JsValueRaw value);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsDeleteIndexedProperty(JsValue obj, JsValue index);
+        internal static extern JsErrorCode JsDeleteIndexedProperty(JsValueRaw obj, JsValueRaw index);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsEquals(JsValue obj1, JsValue obj2, out bool result);
+        internal static extern JsErrorCode JsEquals(JsValueRaw obj1, JsValueRaw obj2, out bool result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsStrictEquals(JsValue obj1, JsValue obj2, out bool result);
+        internal static extern JsErrorCode JsStrictEquals(JsValueRaw obj1, JsValueRaw obj2, out bool result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsHasExternalData(JsValue obj, out bool value);
+        internal static extern JsErrorCode JsHasExternalData(JsValueRaw obj, out bool value);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetExternalData(JsValue obj, out IntPtr externalData);
+        internal static extern JsErrorCode JsGetExternalData(JsValueRaw obj, out IntPtr externalData);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsSetExternalData(JsValue obj, IntPtr externalData);
+        internal static extern JsErrorCode JsSetExternalData(JsValueRaw obj, IntPtr externalData);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateArray(uint length, out JsValue result);
+        internal static extern JsErrorCode JsCreateArray(uint length, out JsValueRaw result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCallFunction(JsValue function, JsValue[] arguments, ushort argumentCount, out JsValue result);
+        internal static extern JsErrorCode JsCallFunction(JsValueRaw function, JsValueRaw[] arguments, ushort argumentCount, out JsValueRaw result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsConstructObject(JsValue function, JsValue[] arguments, ushort argumentCount, out JsValue result);
+        internal static extern JsErrorCode JsConstructObject(JsValueRaw function, JsValueRaw[] arguments, ushort argumentCount, out JsValueRaw result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateFunction(JsNativeFunction nativeFunction, IntPtr externalData, out JsValue function);
+        internal static extern JsErrorCode JsCreateFunction(JsNativeFunction nativeFunction, IntPtr externalData, out JsValueRaw function);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateError(JsValue message, out JsValue error);
+        internal static extern JsErrorCode JsCreateError(JsValueRaw message, out JsValueRaw error);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateRangeError(JsValue message, out JsValue error);
+        internal static extern JsErrorCode JsCreateRangeError(JsValueRaw message, out JsValueRaw error);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateReferenceError(JsValue message, out JsValue error);
+        internal static extern JsErrorCode JsCreateReferenceError(JsValueRaw message, out JsValueRaw error);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateSyntaxError(JsValue message, out JsValue error);
+        internal static extern JsErrorCode JsCreateSyntaxError(JsValueRaw message, out JsValueRaw error);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateTypeError(JsValue message, out JsValue error);
+        internal static extern JsErrorCode JsCreateTypeError(JsValueRaw message, out JsValueRaw error);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateURIError(JsValue message, out JsValue error);
+        internal static extern JsErrorCode JsCreateURIError(JsValueRaw message, out JsValueRaw error);
 
         [DllImport(DllName)]
         internal static extern JsErrorCode JsHasException(out bool hasException);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetAndClearException(out JsValue exception);
+        internal static extern JsErrorCode JsGetAndClearException(out JsValueRaw exception);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsSetException(JsValue exception);
+        internal static extern JsErrorCode JsSetException(JsValueRaw exception);
 
         [DllImport(DllName)]
         internal static extern JsErrorCode JsDisableRuntimeExecution(JsRuntime runtime);
@@ -345,68 +345,68 @@ namespace ByondLang.ChakraCore.Hosting
         internal static extern JsErrorCode JsIsRuntimeExecutionDisabled(JsRuntime runtime, out bool isDisabled);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsSetObjectBeforeCollectCallback(JsValue reference, IntPtr callbackState, JsObjectBeforeCollectCallback beforeCollectCallback);
+        internal static extern JsErrorCode JsSetObjectBeforeCollectCallback(JsValueRaw reference, IntPtr callbackState, JsObjectBeforeCollectCallback beforeCollectCallback);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateNamedFunction(JsValue name, JsNativeFunction nativeFunction, IntPtr callbackState, out JsValue function);
+        internal static extern JsErrorCode JsCreateNamedFunction(JsValueRaw name, JsNativeFunction nativeFunction, IntPtr callbackState, out JsValueRaw function);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateArrayBuffer(uint byteLength, out JsValue result);
+        internal static extern JsErrorCode JsCreateArrayBuffer(uint byteLength, out JsValueRaw result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateTypedArray(JsTypedArrayType arrayType, JsValue arrayBuffer, uint byteOffset,
-            uint elementLength, out JsValue result);
+        internal static extern JsErrorCode JsCreateTypedArray(JsTypedArrayType arrayType, JsValueRaw arrayBuffer, uint byteOffset,
+            uint elementLength, out JsValueRaw result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateDataView(JsValue arrayBuffer, uint byteOffset, uint byteOffsetLength, out JsValue result);
+        internal static extern JsErrorCode JsCreateDataView(JsValueRaw arrayBuffer, uint byteOffset, uint byteOffsetLength, out JsValueRaw result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetArrayBufferStorage(JsValue arrayBuffer, out IntPtr buffer, out uint bufferLength);
+        internal static extern JsErrorCode JsGetArrayBufferStorage(JsValueRaw arrayBuffer, out IntPtr buffer, out uint bufferLength);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetTypedArrayStorage(JsValue typedArray, out IntPtr buffer, out uint bufferLength, out JsTypedArrayType arrayType, out int elementSize);
+        internal static extern JsErrorCode JsGetTypedArrayStorage(JsValueRaw typedArray, out IntPtr buffer, out uint bufferLength, out JsTypedArrayType arrayType, out int elementSize);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetDataViewStorage(JsValue dataView, out IntPtr buffer, out uint bufferLength);
+        internal static extern JsErrorCode JsGetDataViewStorage(JsValueRaw dataView, out IntPtr buffer, out uint bufferLength);
 
         [DllImport(DllName)]
         internal static extern JsErrorCode JsGetPropertyIdType(JsPropertyId propertyId, out JsPropertyIdType propertyIdType);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateSymbol(JsValue description, out JsValue symbol);
+        internal static extern JsErrorCode JsCreateSymbol(JsValueRaw description, out JsValueRaw symbol);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetSymbolFromPropertyId(JsPropertyId propertyId, out JsValue symbol);
+        internal static extern JsErrorCode JsGetSymbolFromPropertyId(JsPropertyId propertyId, out JsValueRaw symbol);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetPropertyIdFromSymbol(JsValue symbol, out JsPropertyId propertyId);
+        internal static extern JsErrorCode JsGetPropertyIdFromSymbol(JsValueRaw symbol, out JsPropertyId propertyId);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetOwnPropertySymbols(JsValue obj, out JsValue propertySymbols);
+        internal static extern JsErrorCode JsGetOwnPropertySymbols(JsValueRaw obj, out JsValueRaw propertySymbols);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsNumberToInt(JsValue value, out int intValue);
+        internal static extern JsErrorCode JsNumberToInt(JsValueRaw value, out int intValue);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsSetIndexedPropertiesToExternalData(JsValue obj, IntPtr data, JsTypedArrayType arrayType, uint elementLength);
+        internal static extern JsErrorCode JsSetIndexedPropertiesToExternalData(JsValueRaw obj, IntPtr data, JsTypedArrayType arrayType, uint elementLength);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetIndexedPropertiesExternalData(JsValue obj, IntPtr data, out JsTypedArrayType arrayType, out uint elementLength);
+        internal static extern JsErrorCode JsGetIndexedPropertiesExternalData(JsValueRaw obj, IntPtr data, out JsTypedArrayType arrayType, out uint elementLength);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsHasIndexedPropertiesExternalData(JsValue obj, out bool value);
+        internal static extern JsErrorCode JsHasIndexedPropertiesExternalData(JsValueRaw obj, out bool value);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsInstanceOf(JsValue obj, JsValue constructor, out bool result);
+        internal static extern JsErrorCode JsInstanceOf(JsValueRaw obj, JsValueRaw constructor, out bool result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreateExternalArrayBuffer(IntPtr data, uint byteLength, JsFinalizeCallback finalizeCallback, IntPtr callbackState, out JsValue result);
+        internal static extern JsErrorCode JsCreateExternalArrayBuffer(IntPtr data, uint byteLength, JsFinalizeCallback finalizeCallback, IntPtr callbackState, out JsValueRaw result);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetTypedArrayInfo(JsValue typedArray, out JsTypedArrayType arrayType, out JsValue arrayBuffer, out uint byteOffset, out uint byteLength);
+        internal static extern JsErrorCode JsGetTypedArrayInfo(JsValueRaw typedArray, out JsTypedArrayType arrayType, out JsValueRaw arrayBuffer, out uint byteOffset, out uint byteLength);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetContextOfObject(JsValue obj, out JsContext context);
+        internal static extern JsErrorCode JsGetContextOfObject(JsValueRaw obj, out JsContext context);
 
         [DllImport(DllName)]
         internal static extern JsErrorCode JsGetContextData(JsContext context, out IntPtr data);
@@ -419,23 +419,23 @@ namespace ByondLang.ChakraCore.Hosting
             JsPromiseContinuationCallback promiseContinuationCallback, IntPtr callbackState);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsCreatePromise(out JsValue promise, out JsValue resolveFunction, out JsValue rejectFunction);
+        internal static extern JsErrorCode JsCreatePromise(out JsValueRaw promise, out JsValueRaw resolveFunction, out JsValueRaw rejectFunction);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetPromiseState(JsValue promise, out JsPromiseState state);
+        internal static extern JsErrorCode JsGetPromiseState(JsValueRaw promise, out JsPromiseState state);
 
         [DllImport(DllName)]
-        internal static extern JsErrorCode JsGetPromiseResult(JsValue promise, out JsValue result);
+        internal static extern JsErrorCode JsGetPromiseResult(JsValueRaw promise, out JsValueRaw result);
 
         [DllImport(DllName)]
         internal static extern JsErrorCode JsSetHostPromiseRejectionTracker(
            JsHostPromiseRejectionTrackerCallback promiseRejectionTrackerCallback, IntPtr callbackState);
 
         [DllImport(DllName, CharSet = CharSet.Unicode)]
-        internal static extern JsErrorCode JsParse(JsValue script, JsSourceContext sourceContext, JsValue sourceUrl, JsParseScriptAttributes parseAttributes, out JsValue result);
+        internal static extern JsErrorCode JsParse(JsValueRaw script, JsSourceContext sourceContext, JsValueRaw sourceUrl, JsParseScriptAttributes parseAttributes, out JsValueRaw result);
 
         [DllImport(DllName, CharSet = CharSet.Unicode)]
-        internal static extern JsErrorCode JsRun(JsValue script, JsSourceContext sourceContext, JsValue sourceUrl, JsParseScriptAttributes parseAttributes, out JsValue result);
+        internal static extern JsErrorCode JsRun(JsValueRaw script, JsSourceContext sourceContext, JsValueRaw sourceUrl, JsParseScriptAttributes parseAttributes, out JsValueRaw result);
 
         // TODO:
         // https://github.com/Microsoft/ChakraCore/issues/4324

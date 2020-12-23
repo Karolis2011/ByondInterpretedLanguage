@@ -10,5 +10,5 @@ namespace ByondLang.ChakraCore.Hosting
     /// </remarks>
     /// <param name="ref">The object to be collected.</param>
     /// <param name="callbackState">The state passed to <c>JsSetObjectBeforeCollectCallback</c>.</param>
-    public delegate void JsObjectBeforeCollectCallback(JsValue reference, IntPtr callbackState);
+    public delegate void JsObjectBeforeCollectCallback(JsValueRaw reference, IntPtr callbackState);
 }

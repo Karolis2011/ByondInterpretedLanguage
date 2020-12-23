@@ -9,5 +9,5 @@
     /// <returns>
     ///     true if the operation succeeded, false otherwise.
     /// </returns>
-    public delegate bool JsSerializedLoadScriptCallback(JsSourceContext sourceContext, out JsValue value, out JsValue parseAttributes);
+    public delegate bool JsSerializedLoadScriptCallback(JsSourceContext sourceContext, out JsValueRaw value, out JsValueRaw parseAttributes);
 }

@@ -10,7 +10,7 @@ namespace ByondLang.ChakraCore.Hosting
     ///     A JavaScript value is one of the following types of values: Undefined, Null, Boolean, 
     ///     String, Number, or Object.
     /// </remarks>
-    public struct JsValue
+    public struct JsValueRaw
     {
         /// <summary>
         /// The reference.
@@ -18,15 +18,15 @@ namespace ByondLang.ChakraCore.Hosting
         private readonly IntPtr reference;
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="JsValue"/> struct.
+        ///     Initializes a new instance of the <see cref="JsValueRaw"/> struct.
         /// </summary>
         /// <param name="reference">The reference.</param>
-        private JsValue(IntPtr reference) => this.reference = reference;
+        private JsValueRaw(IntPtr reference) => this.reference = reference;
 
         /// <summary>
         ///     Gets an invalid value.
         /// </summary>
-        public static JsValue Invalid => new JsValue(IntPtr.Zero);
+        public static JsValueRaw Invalid => new JsValueRaw(IntPtr.Zero);
 
         /// <summary>
         ///     Gets the value of <c>undefined</c> in the current script context.
@@ -34,11 +34,11 @@ namespace ByondLang.ChakraCore.Hosting
         /// <remarks>
         ///     Requires an active script context.
         /// </remarks>
-        public static JsValue Undefined
+        public static JsValueRaw Undefined
         {
             get
             {
-                Native.ThrowIfError(Native.JsGetUndefinedValue(out JsValue value));
+                Native.ThrowIfError(Native.JsGetUndefinedValue(out JsValueRaw value));
                 return value;
             }
         }
@@ -49,11 +49,11 @@ namespace ByondLang.ChakraCore.Hosting
         /// <remarks>
         ///     Requires an active script context.
         /// </remarks>
-        public static JsValue Null
+        public static JsValueRaw Null
         {
             get
             {
-                Native.ThrowIfError(Native.JsGetNullValue(out JsValue value));
+                Native.ThrowIfError(Native.JsGetNullValue(out JsValueRaw value));
                 return value;
             }
         }
@@ -64,11 +64,11 @@ namespace ByondLang.ChakraCore.Hosting
         /// <remarks>
         ///     Requires an active script context.
         /// </remarks>
-        public static JsValue True
+        public static JsValueRaw True
         {
             get
             {
-                Native.ThrowIfError(Native.JsGetTrueValue(out JsValue value));
+                Native.ThrowIfError(Native.JsGetTrueValue(out JsValueRaw value));
                 return value;
             }
         }
@@ -79,11 +79,11 @@ namespace ByondLang.ChakraCore.Hosting
         /// <remarks>
         ///     Requires an active script context.
         /// </remarks>
-        public static JsValue False
+        public static JsValueRaw False
         {
             get
             {
-                Native.ThrowIfError(Native.JsGetFalseValue(out JsValue value));
+                Native.ThrowIfError(Native.JsGetFalseValue(out JsValueRaw value));
                 return value;
             }
         }
@@ -94,11 +94,11 @@ namespace ByondLang.ChakraCore.Hosting
         /// <remarks>
         ///     Requires an active script context.
         /// </remarks>
-        public static JsValue GlobalObject
+        public static JsValueRaw GlobalObject
         {
             get
             {
-                Native.ThrowIfError(Native.JsGetGlobalObject(out JsValue value));
+                Native.ThrowIfError(Native.JsGetGlobalObject(out JsValueRaw value));
                 return value;
             }
         }
@@ -149,11 +149,11 @@ namespace ByondLang.ChakraCore.Hosting
         /// <remarks>
         ///     Requires an active script context.
         /// </remarks>
-        public JsValue Prototype
+        public JsValueRaw Prototype
         {
             get
             {
-                Native.ThrowIfError(Native.JsGetPrototype(this, out JsValue prototypeReference));
+                Native.ThrowIfError(Native.JsGetPrototype(this, out JsValueRaw prototypeReference));
                 return prototypeReference;
             }
 
@@ -221,9 +221,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="value">The value to be converted.</param>
         /// <returns>The converted value.</returns>
-        public static JsValue FromBoolean(bool value)
+        public static JsValueRaw FromBoolean(bool value)
         {
-            Native.ThrowIfError(Native.JsBoolToBoolean(value, out JsValue reference));
+            Native.ThrowIfError(Native.JsBoolToBoolean(value, out JsValueRaw reference));
             return reference;
         }
 
@@ -235,9 +235,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="value">The value to be converted.</param>
         /// <returns>The new <c>Number</c> value.</returns>
-        public static JsValue FromDouble(double value)
+        public static JsValueRaw FromDouble(double value)
         {
-            Native.ThrowIfError(Native.JsDoubleToNumber(value, out JsValue reference));
+            Native.ThrowIfError(Native.JsDoubleToNumber(value, out JsValueRaw reference));
             return reference;
         }
 
@@ -249,9 +249,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="value">The value to be converted.</param>
         /// <returns>The new <c>Number</c> value.</returns>
-        public static JsValue FromInt32(int value)
+        public static JsValueRaw FromInt32(int value)
         {
-            Native.ThrowIfError(Native.JsIntToNumber(value, out JsValue reference));
+            Native.ThrowIfError(Native.JsIntToNumber(value, out JsValueRaw reference));
             return reference;
         }
 
@@ -263,9 +263,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="value">The string  to convert to a <c>String</c> value.</param>
         /// <returns>The new <c>String</c> value.</returns>
-        public static JsValue FromString(string value)
+        public static JsValueRaw FromString(string value)
         {
-            Native.ThrowIfError(Native.JsPointerToString(value, new UIntPtr((uint)value.Length), out JsValue reference));
+            Native.ThrowIfError(Native.JsPointerToString(value, new UIntPtr((uint)value.Length), out JsValueRaw reference));
             return reference;
         }
 
@@ -276,9 +276,9 @@ namespace ByondLang.ChakraCore.Hosting
         ///     Requires an active script context.
         /// </remarks>
         /// <returns>The new <c>Object</c>.</returns>
-        public static JsValue CreateObject()
+        public static JsValueRaw CreateObject()
         {
-            Native.ThrowIfError(Native.JsCreateObject(out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateObject(out JsValueRaw reference));
             return reference;
         }
 
@@ -293,9 +293,9 @@ namespace ByondLang.ChakraCore.Hosting
         ///     A callback for when the object is finalized. May be null.
         /// </param>
         /// <returns>The new <c>Object</c>.</returns>
-        public static JsValue CreateExternalObject(IntPtr data, JsFinalizeCallback finalizer)
+        public static JsValueRaw CreateExternalObject(IntPtr data, JsFinalizeCallback finalizer)
         {
-            Native.ThrowIfError(Native.JsCreateExternalObject(data, finalizer, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateExternalObject(data, finalizer, out JsValueRaw reference));
             return reference;
         }
 
@@ -307,9 +307,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="function">The method to call when the function is invoked.</param>
         /// <returns>The new function object.</returns>
-        public static JsValue CreateFunction(JsNativeFunction function)
+        public static JsValueRaw CreateFunction(JsNativeFunction function)
         {
-            Native.ThrowIfError(Native.JsCreateFunction(function, IntPtr.Zero, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateFunction(function, IntPtr.Zero, out JsValueRaw reference));
             return reference;
         }
 
@@ -322,9 +322,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="function">The method to call when the function is invoked.</param>
         /// <param name="callbackData">Data to be provided to all function callbacks.</param>
         /// <returns>The new function object.</returns>
-        public static JsValue CreateFunction(JsNativeFunction function, IntPtr callbackData)
+        public static JsValueRaw CreateFunction(JsNativeFunction function, IntPtr callbackData)
         {
-            Native.ThrowIfError(Native.JsCreateFunction(function, callbackData, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateFunction(function, callbackData, out JsValueRaw reference));
             return reference;
         }
 
@@ -337,9 +337,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="name">Nane for this function</param>
         /// <param name="function">The method to call when the function is invoked.</param>
         /// <returns>The new function object.</returns>
-        public static JsValue CreateNamedFunction(JsValue name, JsNativeFunction function)
+        public static JsValueRaw CreateNamedFunction(JsValueRaw name, JsNativeFunction function)
         {
-            Native.ThrowIfError(Native.JsCreateNamedFunction(name, function, IntPtr.Zero, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateNamedFunction(name, function, IntPtr.Zero, out JsValueRaw reference));
             return reference;
         }
 
@@ -352,7 +352,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="name">Nane for this function</param>
         /// <param name="function">The method to call when the function is invoked.</param>
         /// <returns>The new function object.</returns>
-        public static JsValue CreateNamedFunction(string name, JsNativeFunction function)
+        public static JsValueRaw CreateNamedFunction(string name, JsNativeFunction function)
         {
             return CreateNamedFunction(FromString(name), function);
         }
@@ -367,9 +367,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="function">The method to call when the function is invoked.</param>
         /// <param name="callbackData">Data to be provided to all function callbacks.</param>
         /// <returns>The new function object.</returns>
-        public static JsValue CreateNamedFunction(JsValue name, JsNativeFunction function, IntPtr callbackData)
+        public static JsValueRaw CreateNamedFunction(JsValueRaw name, JsNativeFunction function, IntPtr callbackData)
         {
-            Native.ThrowIfError(Native.JsCreateNamedFunction(name, function, callbackData, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateNamedFunction(name, function, callbackData, out JsValueRaw reference));
             return reference;
         }
 
@@ -383,7 +383,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="function">The method to call when the function is invoked.</param>
         /// <param name="callbackData">Data to be provided to all function callbacks.</param>
         /// <returns>The new function object.</returns>
-        public static JsValue CreateNamedFunction(string name, JsNativeFunction function, IntPtr callbackData)
+        public static JsValueRaw CreateNamedFunction(string name, JsNativeFunction function, IntPtr callbackData)
         {
             return CreateNamedFunction(FromString(name), function, callbackData);
         }
@@ -397,9 +397,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="length">The initial length of the array.</param>
         /// <returns>The new array object.</returns>
-        public static JsValue CreateArray(uint length)
+        public static JsValueRaw CreateArray(uint length)
         {
-            Native.ThrowIfError(Native.JsCreateArray(length, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateArray(length, out JsValueRaw reference));
             return reference;
         }
 
@@ -411,9 +411,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="message">Message for the error object.</param>
         /// <returns>The new error object.</returns>
-        public static JsValue CreateError(JsValue message)
+        public static JsValueRaw CreateError(JsValueRaw message)
         {
-            Native.ThrowIfError(Native.JsCreateError(message, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateError(message, out JsValueRaw reference));
             return reference;
         }
 
@@ -425,9 +425,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="message">Message for the error object.</param>
         /// <returns>The new error object.</returns>
-        public static JsValue CreateRangeError(JsValue message)
+        public static JsValueRaw CreateRangeError(JsValueRaw message)
         {
-            Native.ThrowIfError(Native.JsCreateRangeError(message, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateRangeError(message, out JsValueRaw reference));
             return reference;
         }
 
@@ -439,9 +439,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="message">Message for the error object.</param>
         /// <returns>The new error object.</returns>
-        public static JsValue CreateReferenceError(JsValue message)
+        public static JsValueRaw CreateReferenceError(JsValueRaw message)
         {
-            Native.ThrowIfError(Native.JsCreateReferenceError(message, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateReferenceError(message, out JsValueRaw reference));
             return reference;
         }
 
@@ -453,9 +453,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="message">Message for the error object.</param>
         /// <returns>The new error object.</returns>
-        public static JsValue CreateSyntaxError(JsValue message)
+        public static JsValueRaw CreateSyntaxError(JsValueRaw message)
         {
-            Native.ThrowIfError(Native.JsCreateSyntaxError(message, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateSyntaxError(message, out JsValueRaw reference));
             return reference;
         }
 
@@ -467,9 +467,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="message">Message for the error object.</param>
         /// <returns>The new error object.</returns>
-        public static JsValue CreateTypeError(JsValue message)
+        public static JsValueRaw CreateTypeError(JsValueRaw message)
         {
-            Native.ThrowIfError(Native.JsCreateTypeError(message, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateTypeError(message, out JsValueRaw reference));
             return reference;
         }
 
@@ -481,9 +481,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="message">Message for the error object.</param>
         /// <returns>The new error object.</returns>
-        public static JsValue CreateUriError(JsValue message)
+        public static JsValueRaw CreateUriError(JsValueRaw message)
         {
-            Native.ThrowIfError(Native.JsCreateURIError(message, out JsValue reference));
+            Native.ThrowIfError(Native.JsCreateURIError(message, out JsValueRaw reference));
             return reference;
         }
 
@@ -495,9 +495,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="message">Message for the error object.</param>
         /// <returns>The new error object.</returns>
-        public static JsValue CreatePromise(out JsValue resolveFunction, out JsValue rejectFunction)
+        public static JsValueRaw CreatePromise(out JsValueRaw resolveFunction, out JsValueRaw rejectFunction)
         {
-            Native.ThrowIfError(Native.JsCreatePromise(out JsValue promise, out resolveFunction, out rejectFunction));
+            Native.ThrowIfError(Native.JsCreatePromise(out JsValueRaw promise, out resolveFunction, out rejectFunction));
             return promise;
         }
 
@@ -606,9 +606,9 @@ namespace ByondLang.ChakraCore.Hosting
         ///     Requires an active script context.
         /// </remarks>
         /// <returns>The converted value.</returns>
-        public JsValue ConvertToBoolean()
+        public JsValueRaw ConvertToBoolean()
         {
-            Native.ThrowIfError(Native.JsConvertValueToBoolean(this, out JsValue booleanReference));
+            Native.ThrowIfError(Native.JsConvertValueToBoolean(this, out JsValueRaw booleanReference));
             return booleanReference;
         }
 
@@ -619,9 +619,9 @@ namespace ByondLang.ChakraCore.Hosting
         ///     Requires an active script context.
         /// </remarks>
         /// <returns>The converted value.</returns>
-        public JsValue ConvertToNumber()
+        public JsValueRaw ConvertToNumber()
         {
-            Native.ThrowIfError(Native.JsConvertValueToNumber(this, out JsValue numberReference));
+            Native.ThrowIfError(Native.JsConvertValueToNumber(this, out JsValueRaw numberReference));
             return numberReference;
         }
 
@@ -632,9 +632,9 @@ namespace ByondLang.ChakraCore.Hosting
         ///     Requires an active script context.
         /// </remarks>
         /// <returns>The converted value.</returns>
-        public JsValue ConvertToString()
+        public JsValueRaw ConvertToString()
         {
-            Native.ThrowIfError(Native.JsConvertValueToString(this, out JsValue stringReference));
+            Native.ThrowIfError(Native.JsConvertValueToString(this, out JsValueRaw stringReference));
             return stringReference;
         }
 
@@ -645,9 +645,9 @@ namespace ByondLang.ChakraCore.Hosting
         ///     Requires an active script context.
         /// </remarks>
         /// <returns>The converted value.</returns>
-        public JsValue ConvertToObject()
+        public JsValueRaw ConvertToObject()
         {
-            Native.ThrowIfError(Native.JsConvertValueToObject(this, out JsValue objectReference));
+            Native.ThrowIfError(Native.JsConvertValueToObject(this, out JsValueRaw objectReference));
             return objectReference;
         }
 
@@ -660,7 +660,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="id">The ID of the property.</param>
         /// <returns>The value of the property.</returns>
-        public JsValue GetProperty(string id)
+        public JsValueRaw GetProperty(string id)
         {
             return GetProperty(JsPropertyId.FromString(id));
         }
@@ -684,9 +684,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="propertyId">The ID of the property.</param>
         /// <returns>The property descriptor.</returns>
-        public JsValue GetOwnPropertyDescriptor(JsPropertyId propertyId)
+        public JsValueRaw GetOwnPropertyDescriptor(JsPropertyId propertyId)
         {
-            Native.ThrowIfError(Native.JsGetOwnPropertyDescriptor(this, propertyId, out JsValue descriptorReference));
+            Native.ThrowIfError(Native.JsGetOwnPropertyDescriptor(this, propertyId, out JsValueRaw descriptorReference));
             return descriptorReference;
         }
 
@@ -697,9 +697,9 @@ namespace ByondLang.ChakraCore.Hosting
         ///     Requires an active script context.
         /// </remarks>
         /// <returns>An array of property names.</returns>
-        public JsValue GetOwnPropertyNames()
+        public JsValueRaw GetOwnPropertyNames()
         {
-            Native.ThrowIfError(Native.JsGetOwnPropertyNames(this, out JsValue propertyNamesReference));
+            Native.ThrowIfError(Native.JsGetOwnPropertyNames(this, out JsValueRaw propertyNamesReference));
             return propertyNamesReference;
         }
 
@@ -725,9 +725,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="id">The ID of the property.</param>
         /// <returns>The value of the property.</returns>
-        public JsValue GetProperty(JsPropertyId id)
+        public JsValueRaw GetProperty(JsPropertyId id)
         {
-            Native.ThrowIfError(Native.JsGetProperty(this, id, out JsValue propertyReference));
+            Native.ThrowIfError(Native.JsGetProperty(this, id, out JsValueRaw propertyReference));
             return propertyReference;
         }
 
@@ -740,7 +740,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="id">The ID of the property.</param>
         /// <param name="value">The new value of the property.</param>
         /// <param name="useStrictRules">The property set should follow strict mode rules.</param>
-        public void SetProperty(JsPropertyId id, JsValue value, bool useStrictRules)
+        public void SetProperty(JsPropertyId id, JsValueRaw value, bool useStrictRules)
         {
             Native.ThrowIfError(Native.JsSetProperty(this, id, value, useStrictRules));
         }
@@ -754,7 +754,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="id">The ID of the property.</param>
         /// <param name="value">The new value of the property.</param>
         /// <param name="useStrictRules">The property set should follow strict mode rules.</param>
-        public void SetProperty(string id, JsValue value, bool useStrictRules)
+        public void SetProperty(string id, JsValueRaw value, bool useStrictRules)
         {
             SetProperty(JsPropertyId.FromString(id), value, useStrictRules);
         }
@@ -768,9 +768,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="propertyId">The ID of the property.</param>
         /// <param name="useStrictRules">The property set should follow strict mode rules.</param>
         /// <returns>Whether the property was deleted.</returns>
-        public JsValue DeleteProperty(JsPropertyId propertyId, bool useStrictRules)
+        public JsValueRaw DeleteProperty(JsPropertyId propertyId, bool useStrictRules)
         {
-            Native.ThrowIfError(Native.JsDeleteProperty(this, propertyId, useStrictRules, out JsValue returnReference));
+            Native.ThrowIfError(Native.JsDeleteProperty(this, propertyId, useStrictRules, out JsValueRaw returnReference));
             return returnReference;
         }
 
@@ -783,7 +783,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="propertyId">The ID of the property.</param>
         /// <param name="propertyDescriptor">The property descriptor.</param>
         /// <returns>Whether the property was defined.</returns>
-        public bool DefineProperty(JsPropertyId propertyId, JsValue propertyDescriptor)
+        public bool DefineProperty(JsPropertyId propertyId, JsValueRaw propertyDescriptor)
         {
             Native.ThrowIfError(Native.JsDefineProperty(this, propertyId, propertyDescriptor, out bool result));
             return result;
@@ -798,7 +798,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="propertyId">The ID of the property.</param>
         /// <param name="propertyDescriptor">The property descriptor.</param>
         /// <returns>Whether the property was defined.</returns>
-        public bool DefineProperty(string propertyId, JsValue propertyDescriptor)
+        public bool DefineProperty(string propertyId, JsValueRaw propertyDescriptor)
         {
             return DefineProperty(JsPropertyId.FromString(propertyId), propertyDescriptor);
         }
@@ -811,7 +811,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="index">The index to test.</param>
         /// <returns>Whether the object has an value at the specified index.</returns>
-        public bool HasIndexedProperty(JsValue index)
+        public bool HasIndexedProperty(JsValueRaw index)
         {
             Native.ThrowIfError(Native.JsHasIndexedProperty(this, index, out bool hasProperty));
             return hasProperty;
@@ -825,9 +825,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="index">The index to retrieve.</param>
         /// <returns>The retrieved value.</returns>
-        public JsValue GetIndexedProperty(JsValue index)
+        public JsValueRaw GetIndexedProperty(JsValueRaw index)
         {
-            Native.ThrowIfError(Native.JsGetIndexedProperty(this, index, out JsValue propertyReference));
+            Native.ThrowIfError(Native.JsGetIndexedProperty(this, index, out JsValueRaw propertyReference));
             return propertyReference;
         }
 
@@ -839,22 +839,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="index">The index to set.</param>
         /// <param name="value">The value to set.</param>
-        public void SetIndexedProperty(JsValue index, JsValue value)
+        public void SetIndexedProperty(JsValueRaw index, JsValueRaw value)
         {
             Native.ThrowIfError(Native.JsSetIndexedProperty(this, index, value));
-        }
-
-        /// <summary>
-        ///     Set the value at the specified index of an object.
-        /// </summary>
-        /// <remarks>
-        ///     Requires an active script context.
-        /// </remarks>
-        /// <param name="index">The index to set.</param>
-        /// <param name="value">The value to set.</param>
-        public void SetIndexedProperty(int index, JsValue value)
-        {
-            SetIndexedProperty(FromInt32(index), value);
         }
 
         /// <summary>
@@ -864,7 +851,7 @@ namespace ByondLang.ChakraCore.Hosting
         ///     Requires an active script context.
         /// </remarks>
         /// <param name="index">The index to delete.</param>
-        public void DeleteIndexedProperty(JsValue index)
+        public void DeleteIndexedProperty(JsValueRaw index)
         {
             Native.ThrowIfError(Native.JsDeleteIndexedProperty(this, index));
         }
@@ -882,7 +869,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="other">The object to compare.</param>
         /// <returns>Whether the values are equal.</returns>
-        public bool Equals(JsValue other)
+        public bool Equals(JsValueRaw other)
         {
             Native.ThrowIfError(Native.JsEquals(this, other, out bool equals));
             return equals;
@@ -901,7 +888,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="other">The object to compare.</param>
         /// <returns>Whether the values are strictly equal.</returns>
-        public bool StrictEquals(JsValue other)
+        public bool StrictEquals(JsValueRaw other)
         {
             Native.ThrowIfError(Native.JsStrictEquals(this, other, out bool equals));
             return equals;
@@ -915,7 +902,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="arguments">The arguments to the call.</param>
         /// <returns>The <c>Value</c> returned from the function invocation, if any.</returns>
-        public JsValue CallFunction(params JsValue[] arguments)
+        public JsValueRaw CallFunction(params JsValueRaw[] arguments)
         {
 
             if (arguments.Length > ushort.MaxValue)
@@ -923,7 +910,7 @@ namespace ByondLang.ChakraCore.Hosting
                 throw new ArgumentOutOfRangeException("arguments");
             }
 
-            Native.ThrowIfError(Native.JsCallFunction(this, arguments, (ushort)arguments.Length, out JsValue returnReference));
+            Native.ThrowIfError(Native.JsCallFunction(this, arguments, (ushort)arguments.Length, out JsValueRaw returnReference));
             return returnReference;
         }
 
@@ -935,18 +922,18 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="arguments">The arguments to the call.</param>
         /// <returns>The <c>Value</c> returned from the function invocation.</returns>
-        public JsValue ConstructObject(params JsValue[] arguments)
+        public JsValueRaw ConstructObject(params JsValueRaw[] arguments)
         {
             if (arguments.Length > ushort.MaxValue)
             {
                 throw new ArgumentOutOfRangeException("arguments");
             }
-            Native.ThrowIfError(Native.JsConstructObject(this, arguments, (ushort)arguments.Length, out JsValue returnReference));
+            Native.ThrowIfError(Native.JsConstructObject(this, arguments, (ushort)arguments.Length, out JsValueRaw returnReference));
             return returnReference;
         }
 
 
-        public static Func<JsValue, string> JsonStringify()
+        public static Func<JsValueRaw, string> JsonStringify()
         {
             var glob = GlobalObject;
             var func = glob.GetProperty("JSON").GetProperty("stringify");

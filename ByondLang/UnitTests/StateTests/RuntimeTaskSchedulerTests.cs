@@ -44,7 +44,9 @@ namespace ByondLang.UnitTests.StateTests
             var task2 = s.Run(() => { Debug.Print("T2."); Thread.Sleep(20); flag2 = true; }, priority: JsTaskPriority.LOWEST);
             var task3 = s.Run(() => { Debug.Print("T3."); Thread.Sleep(20); flag3 = true; }, priority: JsTaskPriority.INITIALIZATION);
             Assert.True(task3.Wait(500));
-            Assert.True(flag3); // We expect task3 to be finished as we asked
+            Assert.True(flag3); // We expect task3 to be finished as we asked and other to be false
+            Assert.False(flag1);
+            Assert.False(flag2);
             // We wait for task 1 and then check for flag.
             Assert.True(task1.Wait(500));
             Assert.True(flag1); // we also expect it to be finished

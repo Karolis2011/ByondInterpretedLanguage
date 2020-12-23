@@ -22,7 +22,7 @@ namespace ByondLang.ChakraCore.Embedding
 		/// <summary>
 		/// JavaScript value created from an host item
 		/// </summary>
-		private readonly JsValue _scriptValue;
+		private readonly JsValueRaw _scriptValue;
 
 		/// <summary>
 		/// List of native functions, that used to access to members of host item
@@ -53,7 +53,7 @@ namespace ByondLang.ChakraCore.Embedding
 		/// <summary>
 		/// Gets a JavaScript value created from an host item
 		/// </summary>
-		public JsValue ScriptValue
+		public JsValueRaw ScriptValue
 		{
 			get { return _scriptValue; }
 		}
@@ -82,7 +82,7 @@ namespace ByondLang.ChakraCore.Embedding
 		/// <param name="hostObject">Instance of host type</param>
 		/// <param name="scriptValue">JavaScript value created from an host item</param>
 		/// <param name="nativeFunctions">List of native functions, that used to access to members of host item</param>
-		protected EmbeddedItem(Type hostType, object hostObject, JsValue scriptValue,
+		protected EmbeddedItem(Type hostType, object hostObject, JsValueRaw scriptValue,
 			IList<JsNativeFunction> nativeFunctions)
 		{
 			_hostType = hostType;

@@ -1,6 +1,7 @@
 ﻿using ByondLang.ChakraCore;
 using ByondLang.ChakraCore.Hosting;
 using ByondLang.ChakraCore.Reflection;
+using ByondLang.ChakraCore.Wrapper;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -42,9 +43,9 @@ namespace ByondLang.Interface.StateObjects
         [JsCallable]
         public void setForeground(float r, float g, float b) => foreground = new Color(r, g, b);
         [JsCallable]
-        public JsValue getForeground(TypeMapper tm)
+        public JsValueRaw getForeground(TypeMapper tm)
         {
-            var array = JsValue.CreateArray(3);
+            var array = JsValueRaw.CreateArray(3);
             array.SetIndexedProperty(0, tm.MTS(foreground.r));
             array.SetIndexedProperty(1, tm.MTS(foreground.g));
             array.SetIndexedProperty(2, tm.MTS(foreground.b));
@@ -53,9 +54,9 @@ namespace ByondLang.Interface.StateObjects
         [JsCallable]
         public void setBackground(float r, float g, float b) => background = new Color(r, g, b);
         [JsCallable]
-        public JsValue getBackground(TypeMapper tm)
+        public JsValueRaw getBackground(TypeMapper tm)
         {
-            var array = JsValue.CreateArray(3);
+            var array = JsValueRaw.CreateArray(3);
             array.SetIndexedProperty(0, tm.MTS(background.r));
             array.SetIndexedProperty(1, tm.MTS(background.g));
             array.SetIndexedProperty(2, tm.MTS(background.b));
@@ -68,9 +69,9 @@ namespace ByondLang.Interface.StateObjects
             cursorY = y;
         }
         [JsCallable]
-        public JsValue getCursor(TypeMapper tm)
+        public JsValueRaw getCursor(TypeMapper tm)
         {
-            var array = JsValue.CreateArray(2);
+            var array = JsValueRaw.CreateArray(2);
             array.SetIndexedProperty(0, tm.MTS(cursorX));
             array.SetIndexedProperty(1, tm.MTS(cursorY));
             return array;
@@ -91,7 +92,7 @@ namespace ByondLang.Interface.StateObjects
             }
         }
         [JsCallable]
-        public void write(JsValue val)
+        public void write(JsValueRaw val)
         {
             if (val.ValueType != JsValueType.String)
                 realWrite(val.ConvertToString().ToString());
@@ -100,7 +101,7 @@ namespace ByondLang.Interface.StateObjects
         }
 
         [JsCallable]
-        public void write(JsValue val, bool promt, JsValue callback)
+        public void write(JsValueRaw val, bool promt, JsValueRaw callback)
         {
             var topic = context.RegisterCallback(callback);
             if (promt)
@@ -112,10 +113,10 @@ namespace ByondLang.Interface.StateObjects
         }
 
         [JsCallable]
-        public void write(JsValue val, JsValue callback) => write(val, false, callback);
+        public void write(JsValueRaw val, JsValueRaw callback) => write(val, false, callback);
 
         [JsCallable]
-        public void print(JsValue val)
+        public void print(JsValueRaw val)
         {
             write(val);
             cursorX = 0;
@@ -152,15 +153,18 @@ namespace ByondLang.Interface.StateObjects
             }
         }
         [JsCallable]
-        public JsValue getSize(TypeMapper tm)
+        public JsValueRaw getSize(TypeMapper tm)
         {
-            var array = JsValue.CreateArray(2);
-            array.SetIndexedProperty(0, tm.MTS(width));
-            array.SetIndexedProperty(1, tm.MTS(height));
+            var array = new JsArray(2);
+            array[0] = JsNumber.FromNumber(width);
+            array[1] = JsNumber.FromNumber(height);
+            var array2 = JsValueRaw.CreateArray(2);
+            array2.SetIndexedProperty(0, tm.MTS(width));
+            array2.SetIndexedProperty(1, tm.MTS(height));
             return array;
         }
         [JsCallable]
-        public void setTopic(int x, int y, int w, int h, bool promt, JsValue callback)
+        public void setTopic(int x, int y, int w, int h, bool promt, JsValueRaw callback)
         {
             var topic = context.RegisterCallback(callback);
             if (promt)
@@ -174,7 +178,7 @@ namespace ByondLang.Interface.StateObjects
             }
         }
         [JsCallable]
-        public void setTopic(int x, int y, int w, int h, JsValue callback) => setTopic(x, y, w, h, false, callback);
+        public void setTopic(int x, int y, int w, int h, JsValueRaw callback) => setTopic(x, y, w, h, false, callback);
 
         [JsCallable]
         public void clearTopic(int x, int y, int w, int h)

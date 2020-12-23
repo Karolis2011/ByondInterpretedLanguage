@@ -142,9 +142,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </param>
         /// <param name="sourceName">The location the script came from.</param>
         /// <returns>A <c>Function</c> representing the script code.</returns>
-        public static JsValue ParseScript(string script, JsSourceContext sourceContext, string sourceName)
+        public static JsValueRaw ParseScript(string script, JsSourceContext sourceContext, string sourceName)
         {
-            Native.ThrowIfError(Native.JsParse(JsValue.FromString(script), sourceContext, JsValue.FromString(sourceName), JsParseScriptAttributes.None, out JsValue result));
+            Native.ThrowIfError(Native.JsParse(JsValueRaw.FromString(script), sourceContext, JsValueRaw.FromString(sourceName), JsParseScriptAttributes.None, out JsValueRaw result));
             return result;
         }
 
@@ -156,7 +156,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="script">The script to parse.</param>
         /// <returns>A <c>Function</c> representing the script code.</returns>
-        public static JsValue ParseScript(string script)
+        public static JsValueRaw ParseScript(string script)
         {
             return ParseScript(script, JsSourceContext.None, string.Empty);
         }
@@ -173,9 +173,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </param>
         /// <param name="sourceName">The location the script came from.</param>
         /// <returns>The result of the script, if any.</returns>
-        public static JsValue RunScript(string script, JsSourceContext sourceContext, string sourceName)
+        public static JsValueRaw RunScript(string script, JsSourceContext sourceContext, string sourceName)
         {
-            return Run(JsValue.FromString(script), sourceContext, JsValue.FromString(sourceName), JsParseScriptAttributes.None);
+            return Run(JsValueRaw.FromString(script), sourceContext, JsValueRaw.FromString(sourceName), JsParseScriptAttributes.None);
         }
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// </remarks>
         /// <param name="script">The script to run.</param>
         /// <returns>The result of the script, if any.</returns>
-        public static JsValue RunScript(string script)
+        public static JsValueRaw RunScript(string script)
         {
             return RunScript(script, JsSourceContext.None, string.Empty);
         }
@@ -203,9 +203,9 @@ namespace ByondLang.ChakraCore.Hosting
         /// </param>
         /// <param name="sourceName">The location the script came from.</param>
         /// <returns>The result of the script, if any.</returns>
-        public static JsValue Run(JsValue script, JsSourceContext sourceContext, JsValue sourceUrl, JsParseScriptAttributes parseAttributes)
+        public static JsValueRaw Run(JsValueRaw script, JsSourceContext sourceContext, JsValueRaw sourceUrl, JsParseScriptAttributes parseAttributes)
         {
-            Native.ThrowIfError(Native.JsRun(script, sourceContext, sourceUrl, parseAttributes, out JsValue result));
+            Native.ThrowIfError(Native.JsRun(script, sourceContext, sourceUrl, parseAttributes, out JsValueRaw result));
             return result;
         }
 
@@ -226,9 +226,9 @@ namespace ByondLang.ChakraCore.Hosting
         ///     </para>
         /// </remarks>
         /// <returns>The exception for the runtime of the current context.</returns>
-        public static JsValue GetAndClearException()
+        public static JsValueRaw GetAndClearException()
         {
-            Native.ThrowIfError(Native.JsGetAndClearException(out JsValue reference));
+            Native.ThrowIfError(Native.JsGetAndClearException(out JsValueRaw reference));
             return reference;
         }
 
@@ -247,7 +247,7 @@ namespace ByondLang.ChakraCore.Hosting
         /// <param name="exception">
         ///     The JavaScript exception to set for the runtime of the current context.
         /// </param>
-        public static void SetException(JsValue exception)
+        public static void SetException(JsValueRaw exception)
         {
             Native.ThrowIfError(Native.JsSetException(exception));
         }

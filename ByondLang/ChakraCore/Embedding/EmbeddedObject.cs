@@ -13,7 +13,7 @@ namespace ByondLang.ChakraCore.Embedding
 		/// </summary>
 		/// <param name="hostObject">Instance of host type</param>
 		/// <param name="scriptValue">JavaScript value created from an host object</param>
-		public EmbeddedObject(object hostObject, JsValue scriptValue)
+		public EmbeddedObject(object hostObject, JsValueRaw scriptValue)
 			: base(hostObject.GetType(), hostObject, scriptValue, new List<JsNativeFunction>())
 		{ }
 
@@ -23,7 +23,7 @@ namespace ByondLang.ChakraCore.Embedding
 		/// <param name="hostObject">Instance of host type</param>
 		/// <param name="scriptValue">JavaScript value created from an host object</param>
 		/// <param name="nativeFunctions">List of native functions, that used to access to members of host object</param>
-		public EmbeddedObject(object hostObject, JsValue scriptValue,
+		public EmbeddedObject(object hostObject, JsValueRaw scriptValue,
 			IList<JsNativeFunction> nativeFunctions)
 			: base(hostObject.GetType(), hostObject, scriptValue, nativeFunctions)
 		{ }

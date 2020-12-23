@@ -18,7 +18,7 @@ namespace ByondLang.Interface
         private TypeMapper typeMapper = new TypeMapper();
         private JsPFIFOScheduler scheduler = new JsPFIFOScheduler();
         private List<BaseProgram> programs = new List<BaseProgram>();
-        private Dictionary<string, JsValue> callbacks = new Dictionary<string, JsValue>();
+        private Dictionary<string, JsValueRaw> callbacks = new Dictionary<string, JsValueRaw>();
         public readonly NTSL3Service Service;
 
         public Runtime(NTSL3Service service)
@@ -51,7 +51,7 @@ namespace ByondLang.Interface
             programs.Remove(context);
         }
 
-        private void PromiseContinuationCallback(JsValue task, IntPtr callbackState)
+        private void PromiseContinuationCallback(JsValueRaw task, IntPtr callbackState)
         {
             task.AddRef();
             JsContext context = JsContext.Current;
@@ -59,7 +59,7 @@ namespace ByondLang.Interface
             {
                 using (new JsContext.Scope(context))
                 {
-                    task.CallFunction(JsValue.GlobalObject);
+                    task.CallFunction(JsValueRaw.GlobalObject);
                 }
                 task.AddRef();
             }, priority: JsTaskPriority.PROMISE);

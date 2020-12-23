@@ -31,8 +31,8 @@ namespace ByondLang.Interface
             {
                 using (new JsContext.Scope(_context))
                 {
-                    JsValue callbackParam = data == null ? JsValue.Null : JsValue.FromString(data);
-                    callback.CallFunction(JsValue.GlobalObject, callbackParam);
+                    JsValueRaw callbackParam = data == null ? JsValueRaw.Null : JsValueRaw.FromString(data);
+                    callback.CallFunction(JsValueRaw.GlobalObject, callbackParam);
                 }
             }, this, HandleException, JsTaskPriority.CALLBACK);
         }
@@ -53,7 +53,7 @@ namespace ByondLang.Interface
         {
             base.InstallInterfaces();
             // Install APIs: term
-            var glob = JsValue.GlobalObject;
+            var glob = JsValueRaw.GlobalObject;
             glob.SetProperty("Term", _typeMapper.MTS(terminal), true); ;
         }
     }

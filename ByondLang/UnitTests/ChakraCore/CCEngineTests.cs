@@ -24,7 +24,7 @@ namespace ByondLang.UnitTests.ChakraCore
             using (new JsContext.Scope(fixture.context))
             {
                 var ow = JsContext.RunScript("x = 5");
-                var gob = JsValue.GlobalObject;
+                var gob = JsValueRaw.GlobalObject;
                 var value = gob.GetProperty("x");
                 Assert.Equal(ow, value);
                 Assert.Equal(JsValueType.Number, value.ValueType);
@@ -38,7 +38,7 @@ namespace ByondLang.UnitTests.ChakraCore
             using (new JsContext.Scope(fixture.context))
             {
                 var fun = JsContext.RunScript("x = 0; ()=>{x++;}");
-                var gob = JsValue.GlobalObject;
+                var gob = JsValueRaw.GlobalObject;
                 var value = gob.GetProperty("x");
                 Assert.Equal(0, value.ToInt32());
                 fun.CallFunction(gob);
@@ -74,7 +74,7 @@ namespace ByondLang.UnitTests.ChakraCore
         {
             using (new JsContext.Scope(fixture.context))
             {
-                var gob = JsValue.GlobalObject;
+                var gob = JsValueRaw.GlobalObject;
                 var flag = 0;
                 Func<int, string> del = (num) =>
                 {
@@ -94,7 +94,7 @@ namespace ByondLang.UnitTests.ChakraCore
         {
             using (new JsContext.Scope(fixture.context))
             {
-                var gob = JsValue.GlobalObject;
+                var gob = JsValueRaw.GlobalObject;
                 Func<int, string> del = (num) =>
                 {
                     return "Win!";
@@ -118,11 +118,11 @@ namespace ByondLang.UnitTests.ChakraCore
         {
             using (new JsContext.Scope(fixture.context))
             {
-                var gob = JsValue.GlobalObject;
-                var array = JsValue.CreateArray(3);
-                array.SetIndexedProperty(0, JsValue.FromInt32(1));
-                array.SetIndexedProperty(1, JsValue.FromInt32(2));
-                array.SetIndexedProperty(2, JsValue.FromInt32(7));
+                var gob = JsValueRaw.GlobalObject;
+                var array = JsValueRaw.CreateArray(3);
+                array.SetIndexedProperty(0, JsValueRaw.FromInt32(1));
+                array.SetIndexedProperty(1, JsValueRaw.FromInt32(2));
+                array.SetIndexedProperty(2, JsValueRaw.FromInt32(7));
                 gob.SetProperty("x", array, true);
                 var result = JsContext.RunScript("x[0]");
                 var finalResult = fixture.typeMapper.MapToHostType(result);

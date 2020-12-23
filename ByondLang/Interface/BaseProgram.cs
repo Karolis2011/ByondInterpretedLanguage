@@ -22,7 +22,7 @@ namespace ByondLang.Interface
         protected JsContext _context;
         protected TypeMapper _typeMapper;
         protected Task lastExecutionTask;
-        protected Dictionary<string, JsValue> callbacks = new Dictionary<string, JsValue>();
+        protected Dictionary<string, JsValueRaw> callbacks = new Dictionary<string, JsValueRaw>();
         private ILogger<BaseProgram> logger;
 
         public BaseProgram(Runtime runtime, JsContext context, TypeMapper typeMapper)
@@ -56,7 +56,7 @@ namespace ByondLang.Interface
             _context.Release();
         }
 
-        internal string RegisterCallback(JsValue callback)
+        internal string RegisterCallback(JsValueRaw callback)
         {
             callback.AddRef();
             var hash = GenerateCallbackHash();
@@ -89,7 +89,7 @@ namespace ByondLang.Interface
             return false;
         }
 
-        public JsTask<JsValue> ExecuteScript(string script)
+        public JsTask<JsValueRaw> ExecuteScript(string script)
         {
             return _runtime.TimedFunction(() =>
             {

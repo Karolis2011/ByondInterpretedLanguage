@@ -13,5 +13,5 @@ namespace ByondLang.ChakraCore.Hosting
     /// </remarks>
     /// <param name="task">The task, represented as a JavaScript function.</param>
     /// <param name="callbackState">The data argument to be passed to the callback.</param>
-    public delegate void JsPromiseContinuationCallback(JsValue task, IntPtr callbackState);
+    public delegate void JsPromiseContinuationCallback(JsValueRaw task, IntPtr callbackState);
 }

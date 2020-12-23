@@ -24,7 +24,7 @@ namespace ByondLang.UnitTests.ChakraCore
             {
                 using (new JsContext.Scope(fixture.context))
                 {
-                    var glob = JsValue.GlobalObject;
+                    var glob = JsValueRaw.GlobalObject;
                     glob.SetProperty("AT", tm.MTS((Action<bool>)Assert.True), true);
                     glob.SetProperty("AF", tm.MTS((Action<bool>)Assert.False), true);
                     glob.SetProperty("tv_string1", tm.MTS("Test"), true);

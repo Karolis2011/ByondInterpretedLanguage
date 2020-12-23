@@ -37,7 +37,7 @@ namespace ByondLang.Interface
         {
             base.InstallInterfaces();
             // Install APIs: comm
-            var glob = JsValue.GlobalObject;
+            var glob = JsValueRaw.GlobalObject;
             glob.SetProperty("Comm", _typeMapper.MTS(comm), true); ;
         }
     }

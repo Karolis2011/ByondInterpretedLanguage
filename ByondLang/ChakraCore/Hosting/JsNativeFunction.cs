@@ -14,10 +14,10 @@ namespace ByondLang.ChakraCore.Hosting
     /// <param name="argumentCount">The number of arguments.</param>
     /// <param name="callbackState">The state passed to <c>JsCreateFunction</c>.</param>
     /// <returns>The result of the call, if any.</returns>
-    public delegate JsValue JsNativeFunction(
-        JsValue callee,
+    public delegate JsValueRaw JsNativeFunction(
+        JsValueRaw callee,
         [MarshalAs(UnmanagedType.U1)] bool isConstructCall,
-        [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 3)] JsValue[] arguments,
+        [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 3)] JsValueRaw[] arguments,
         ushort argumentCount,
         IntPtr callbackState);
 
