@@ -13,6 +13,7 @@ namespace ByondLang
     {
         public static void Main(string[] args)
         {
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             if (args.Contains("--worker"))
             {
                 CreateWorkerHostBuilder(args).Build().Run();
@@ -36,10 +37,19 @@ namespace ByondLang
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseKestrel(options => {
+                    webBuilder.UseKestrel(options =>
+                    {
                         options.Limits.MaxRequestLineSize = (int)Math.Pow(2, 16);
                     });
                     webBuilder.UseStartup<WorkerStartup>();
+                })
+                .ConfigureWebHost(webBuilder =>
+                {
+                    webBuilder.UseKestrel(options =>
+                    {
+                        var port = Convert.ToInt32( Environment.GetEnvironmentVariable("_WORKER_PORT"));
+                        options.ListenLocalhost(port, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
+                    });
                 });
     }
 }

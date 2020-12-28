@@ -66,14 +66,14 @@ namespace ByondLang.State
             var mp = Process.GetCurrentProcess();
 
             var startInfo = new ProcessStartInfo(mp.MainModule.FileName, "--worker");
-            startInfo.EnvironmentVariables["ASPNETCORE_URLS"] = $"https://localhost:{port}";
+            startInfo.EnvironmentVariables["_WORKER_PORT"] = $"{port}";
             startInfo.UseShellExecute = false;
             process = Process.Start(startInfo);
 
             var httpHandler = new HttpClientHandler();
             httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
 
-            channel = GrpcChannel.ForAddress($"https://localhost:{port}", new GrpcChannelOptions() { 
+            channel = GrpcChannel.ForAddress($"http://localhost:{port}", new GrpcChannelOptions() { 
                 HttpHandler = httpHandler
             });
 
