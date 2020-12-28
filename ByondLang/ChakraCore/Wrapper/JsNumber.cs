@@ -8,6 +8,7 @@ namespace ByondLang.ChakraCore.Wrapper
 {
     public class JsNumber : JsValue
     {
+		public static new bool isSupported(JsValueType type) => type == JsValueType.Number;
 		public static JsNumber FromNumber(object value)
 		{
 			TypeCode typeCode = Type.GetTypeCode(value.GetType());
@@ -32,7 +33,9 @@ namespace ByondLang.ChakraCore.Wrapper
 
         public JsNumber(JsValueRaw jsValue)
         {
-            if (jsValue.ValueType != JsValueType.Number)
+			if (!jsValue.IsValid)
+				throw new Exception("Indalid value");
+			if (jsValue.ValueType != JsValueType.Number)
                 throw new Exception("Invalid JsValue type.");
 
             this.jsValue = jsValue;
@@ -47,5 +50,12 @@ namespace ByondLang.ChakraCore.Wrapper
 		public static implicit operator decimal(JsNumber number) => Convert.ToDecimal(number.jsValue.ToDouble());
 		public static implicit operator float(JsNumber number) => Convert.ToSingle(number.jsValue.ToDouble());
 
+		public static implicit operator JsNumber(int value) => FromNumber(value);
+		public static implicit operator JsNumber(long value) => FromNumber(value);
+		public static implicit operator JsNumber(short value) => FromNumber(value);
+		public static implicit operator JsNumber(byte value) => FromNumber(value);
+		public static implicit operator JsNumber(double value) => FromNumber(value);
+		public static implicit operator JsNumber(decimal value) => FromNumber(value);
+		public static implicit operator JsNumber(float value) => FromNumber(value);
 	}
 }

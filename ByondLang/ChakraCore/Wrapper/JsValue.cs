@@ -8,6 +8,8 @@ namespace ByondLang.ChakraCore.Wrapper
         internal JsValueRaw jsValue;
         private bool disposedValue;
 
+        public static bool isSupported(JsValueType type) => true;
+
         public static JsValue FromRaw(JsValueRaw jsValue)
         {
             if (!jsValue.IsValid)
@@ -17,10 +19,8 @@ namespace ByondLang.ChakraCore.Wrapper
             {
                 case JsValueType.Undefined:
                     return new JsUndefined(jsValue);
-                    break;
                 case JsValueType.Null:
-                    return new Js
-                    break;
+                    return new JsValue(jsValue);
                 case JsValueType.Number:
                     return new JsNumber(jsValue);
                 case JsValueType.String:
@@ -28,9 +28,9 @@ namespace ByondLang.ChakraCore.Wrapper
                 case JsValueType.Boolean:
                     break;
                 case JsValueType.Object:
-                    break;
+                    return new JsObject(jsValue);
                 case JsValueType.Function:
-                    break;
+                    return new JsFunction(jsValue);
                 case JsValueType.Error:
                     break;
                 case JsValueType.Array:
@@ -91,5 +91,7 @@ namespace ByondLang.ChakraCore.Wrapper
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+
+        public static implicit operator JsValueRaw(JsValue value) => value.jsValue;
     }
 }

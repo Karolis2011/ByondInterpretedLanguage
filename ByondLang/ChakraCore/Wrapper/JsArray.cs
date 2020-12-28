@@ -8,6 +8,7 @@ namespace ByondLang.ChakraCore.Wrapper
 {
     public class JsArray : JsValue
     {
+        public static new bool isSupported(JsValueType type) => type == JsValueType.Array;
 
         public JsArray(uint length)
         {

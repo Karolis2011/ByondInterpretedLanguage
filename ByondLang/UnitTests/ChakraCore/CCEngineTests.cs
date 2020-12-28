@@ -120,9 +120,9 @@ namespace ByondLang.UnitTests.ChakraCore
             {
                 var gob = JsValueRaw.GlobalObject;
                 var array = JsValueRaw.CreateArray(3);
-                array.SetIndexedProperty(0, JsValueRaw.FromInt32(1));
-                array.SetIndexedProperty(1, JsValueRaw.FromInt32(2));
-                array.SetIndexedProperty(2, JsValueRaw.FromInt32(7));
+                array.SetIndexedProperty(JsValueRaw.FromInt32(0), JsValueRaw.FromInt32(1));
+                array.SetIndexedProperty(JsValueRaw.FromInt32(1), JsValueRaw.FromInt32(2));
+                array.SetIndexedProperty(JsValueRaw.FromInt32(2), JsValueRaw.FromInt32(7));
                 gob.SetProperty("x", array, true);
                 var result = JsContext.RunScript("x[0]");
                 var finalResult = fixture.typeMapper.MapToHostType(result);

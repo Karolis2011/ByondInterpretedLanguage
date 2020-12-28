@@ -43,23 +43,23 @@ namespace ByondLang.Interface.StateObjects
         [JsCallable]
         public void setForeground(float r, float g, float b) => foreground = new Color(r, g, b);
         [JsCallable]
-        public JsValueRaw getForeground(TypeMapper tm)
+        public JsValueRaw getForeground()
         {
-            var array = JsValueRaw.CreateArray(3);
-            array.SetIndexedProperty(0, tm.MTS(foreground.r));
-            array.SetIndexedProperty(1, tm.MTS(foreground.g));
-            array.SetIndexedProperty(2, tm.MTS(foreground.b));
+            var array = new JsArray(3);
+            array[0] = (JsNumber)foreground.r;
+            array[1] = (JsNumber)foreground.g;
+            array[2] = (JsNumber)foreground.b;
             return array;
         }
         [JsCallable]
         public void setBackground(float r, float g, float b) => background = new Color(r, g, b);
         [JsCallable]
-        public JsValueRaw getBackground(TypeMapper tm)
+        public JsValueRaw getBackground()
         {
-            var array = JsValueRaw.CreateArray(3);
-            array.SetIndexedProperty(0, tm.MTS(background.r));
-            array.SetIndexedProperty(1, tm.MTS(background.g));
-            array.SetIndexedProperty(2, tm.MTS(background.b));
+            var array = new JsArray(3);
+            array[0] = (JsNumber)background.r;
+            array[1] = (JsNumber)background.g;
+            array[2] = (JsNumber)background.b;
             return array;
         }
         [JsCallable]
@@ -69,11 +69,11 @@ namespace ByondLang.Interface.StateObjects
             cursorY = y;
         }
         [JsCallable]
-        public JsValueRaw getCursor(TypeMapper tm)
+        public JsValueRaw getCursor()
         {
-            var array = JsValueRaw.CreateArray(2);
-            array.SetIndexedProperty(0, tm.MTS(cursorX));
-            array.SetIndexedProperty(1, tm.MTS(cursorY));
+            var array = new JsArray(2);
+            array[0] = (JsNumber)cursorX;
+            array[1] = (JsNumber)cursorY;
             return array;
         }
         [JsCallable]
@@ -153,14 +153,11 @@ namespace ByondLang.Interface.StateObjects
             }
         }
         [JsCallable]
-        public JsValueRaw getSize(TypeMapper tm)
+        public JsValueRaw getSize()
         {
             var array = new JsArray(2);
-            array[0] = JsNumber.FromNumber(width);
-            array[1] = JsNumber.FromNumber(height);
-            var array2 = JsValueRaw.CreateArray(2);
-            array2.SetIndexedProperty(0, tm.MTS(width));
-            array2.SetIndexedProperty(1, tm.MTS(height));
+            array[0] = (JsNumber)width;
+            array[1] = (JsNumber)height;
             return array;
         }
         [JsCallable]

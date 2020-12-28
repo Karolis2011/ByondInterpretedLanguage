@@ -8,6 +8,7 @@ namespace ByondLang.ChakraCore.Wrapper
 {
     public class JsUndefined : JsValue
     {
+        public static new bool isSupported(JsValueType type) => type == JsValueType.Undefined;
         public JsUndefined()
         {
             jsValue = JsValueRaw.Undefined;

@@ -8,8 +8,8 @@ namespace ByondLang.ChakraCore.Wrapper
 {
     public class JsGlobalObject : JsObject
     {
-
-        public JsGlobalObject()
+        public static new bool isSupported(JsValueType type) => false;
+        public JsGlobalObject() : base()
         {
             jsValue = JsValueRaw.GlobalObject;
             jsValue.AddRef();

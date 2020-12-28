@@ -2,6 +2,7 @@
 using ByondLang.ChakraCore.Hosting;
 using ByondLang.ChakraCore.Hosting.Helpers;
 using ByondLang.ChakraCore.Reflection;
+using ByondLang.ChakraCore.Wrapper;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Concurrent;
@@ -15,7 +16,6 @@ using System.Threading.Tasks;
 
 namespace ByondLang.ChakraCore
 {
-	[Obsolete]
     public class TypeMapper : IDisposable
     {
 		/// <summary>
@@ -686,6 +686,10 @@ namespace ByondLang.ChakraCore
 						processedArgs[i] = args[aPos];
 						aPos++;
 						break;
+					case ParameterType.Wrap:
+						processedArgs[i] = JsValue.FromRaw(args[aPos]);
+						aPos++;
+						break;
 					case ParameterType.InjectMeta:
 						var pi = parameterInfos[i];
 						if (pi.ParameterType == typeof(JsRuntime))
@@ -713,6 +717,10 @@ namespace ByondLang.ChakraCore
 						break;
 					case ParameterType.This:
 						processedArgs[i] = args[0];
+						if(typeof(JsObject).IsAssignableFrom(parameterInfos[i].ParameterType))
+                        {
+							processedArgs[i] = new JsObject(args[0]);
+						}
 						break;
 					default:
 						break;
@@ -742,12 +750,7 @@ namespace ByondLang.ChakraCore
 				}
 				if (param.ParameterType == typeof(JsValueRaw))
 				{
-					if (param.GetCustomAttribute<GlobalStateAttribute>() != null)
-					{
-						parameterTypes[i] = ParameterType.GLOB;
-						continue;
-					}
-					else if (param.GetCustomAttribute<ThisAttribute>() != null)
+					if (param.GetCustomAttribute<ThisAttribute>() != null)
 					{
 						parameterTypes[i] = ParameterType.This;
 						continue;
@@ -758,6 +761,25 @@ namespace ByondLang.ChakraCore
 						if (args.Length <= argPos && !param.IsOptional)
 							return false;
 						parameterTypes[i] = ParameterType.Direct;
+						argPos++;
+						continue;
+					}
+				}
+				if(typeof(JsValue).IsAssignableFrom(param.ParameterType))
+                {
+					if (param.GetCustomAttribute<ThisAttribute>() != null && param.ParameterType == typeof(JsObject))
+					{
+						parameterTypes[i] = ParameterType.This;
+						continue;
+					}
+					else
+					{
+						// We ran out of arguments
+						if (args.Length <= argPos && !param.IsOptional)
+							return false;
+						var method = param.ParameterType.GetMethod("isSupported");
+						bool supportedType = (bool)method.Invoke(null, new object[] { args[argPos] });
+						parameterTypes[i] = ParameterType.Wrap;
 						argPos++;
 						continue;
 					}
@@ -989,6 +1011,7 @@ namespace ByondLang.ChakraCore
 		enum ParameterType
 		{
 			Direct, // Taken from args
+			Wrap, // Taken from args
 			InjectMeta, 
 			Convert, // Taken from args
 			GLOB,
