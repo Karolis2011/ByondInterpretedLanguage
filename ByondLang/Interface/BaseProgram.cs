@@ -22,7 +22,7 @@ namespace ByondLang.Interface
         protected JsContext _context;
         protected TypeMapper _typeMapper;
         protected Task lastExecutionTask;
-        protected Dictionary<string, JsValue> callbacks = new Dictionary<string, JsValue>();
+        protected Dictionary<string, WeakReference<JsCallback>> callbacks = new Dictionary<string, WeakReference<JsCallback>>();
         private ILogger<BaseProgram> logger;
 
         public BaseProgram(Runtime runtime, JsContext context, TypeMapper typeMapper)
@@ -48,20 +48,16 @@ namespace ByondLang.Interface
         public void Dispose()
         {
             _runtime.RemoveContext(this);
-            foreach (var callback in callbacks)
-            {
-                callback.Value.Release();
-            }
             callbacks.Clear();
             _context.Release();
         }
 
-        internal string RegisterCallback(JsValue callback)
+        internal JsCallback RegisterCallback(JsValue callback)
         {
-            callback.AddRef();
             var hash = GenerateCallbackHash();
-            callbacks[hash] = callback;
-            return hash;
+            var call = new JsCallback(hash, callback);
+            callbacks[hash] = new WeakReference<JsCallback>(call);
+            return call;
         }
 
         private string GenerateCallbackHash()

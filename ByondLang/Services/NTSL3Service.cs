@@ -24,8 +24,7 @@ namespace ByondLang.Services
         {
             foreach (var program in programs)
             {
-                _ = program.Value.Recycle();
-                recycledPrograms.Enqueue(program.Value);
+                _ = recycle(program.Value);
             }
             programs.Clear();
             lastId = 1;
@@ -78,8 +77,16 @@ namespace ByondLang.Services
             var p = GetProgram(id);
             programs.Remove(id);
 
-            _ = p.Recycle();
-            recycledPrograms.Enqueue(p);
+            _ = recycle(p);
+        }
+
+        private async Task recycle(State.Program program)
+        {
+            bool result = await program.Recycle();
+            if(result)
+            {
+                recycledPrograms.Enqueue(program);
+            }
         }
     }
 }

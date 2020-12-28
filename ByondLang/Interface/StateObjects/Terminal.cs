@@ -102,13 +102,11 @@ namespace ByondLang.Interface.StateObjects
         [JsCallable]
         public void write(JsValue val, bool promt, JsValue callback)
         {
-            var topic = context.RegisterCallback(callback);
-            if (promt)
-                topic = "?" + topic;
+            var callbackObject = context.RegisterCallback(callback);
             if (val.ValueType != JsValueType.String)
-                realWrite(val.ConvertToString().ToString(), topic);
+                realWrite(val.ConvertToString().ToString(), callbackObject, promt);
             else
-                realWrite(val.ToString(), topic);
+                realWrite(val.ToString(), callbackObject, promt);
         }
 
         [JsCallable]
@@ -122,7 +120,7 @@ namespace ByondLang.Interface.StateObjects
             MoveDown();
         }
 
-        private void realWrite(string str, string topic = null)
+        private void realWrite(string str, JsCallback topic = null, bool prompt = false)
         {
             foreach (char c in str)
             {
@@ -145,7 +143,7 @@ namespace ByondLang.Interface.StateObjects
                 {
                     lock (char_array)
                     {
-                        char_array[cursorY][cursorX] = new TerminalChar(c, background, foreground, topic);
+                        char_array[cursorY][cursorX] = new TerminalChar(c, background, foreground, topic, prompt);
                     }
                     MoveRight();
                 }
@@ -162,14 +160,12 @@ namespace ByondLang.Interface.StateObjects
         [JsCallable]
         public void setTopic(int x, int y, int w, int h, bool promt, JsValue callback)
         {
-            var topic = context.RegisterCallback(callback);
-            if (promt)
-                topic = "?" + topic;
+            var callbackObject = context.RegisterCallback(callback);
             for (int X = 0; X < w; X++)
             {
                 for (int Y = 0; Y < h; Y++)
                 {
-                    SetTopic(x + X, y + Y, topic);
+                    SetTopic(x + X, y + Y, callbackObject, promt);
                 }
             }
         }
@@ -183,7 +179,7 @@ namespace ByondLang.Interface.StateObjects
             {
                 for (int Y = 0; Y < h; Y++)
                 {
-                    SetTopic(x + X, y + Y, null);
+                    SetTopic(x + X, y + Y, null, false);
                 }
             }
         }
@@ -300,11 +296,13 @@ namespace ByondLang.Interface.StateObjects
         }
         
 
-        private void SetTopic(int x, int y, string topic)
+        private void SetTopic(int x, int y, JsCallback callback, bool prompt)
         {
             if (y >= 0 && x >= 0 && x < width && y < height)
             {
-                char_array[y][x].topic = topic;
+                char_array[y][x].callback = callback;
+                char_array[y][x].prompt = prompt;
+
             }
         }
 
@@ -326,19 +324,34 @@ namespace ByondLang.Interface.StateObjects
             public char text = ' ';
             public Color background = new Color(0, 0, 0);
             public Color foreground = new Color(255, 255, 255);
-            public string topic = null;
+            public JsCallback callback = null;
+            public bool prompt = false;
+
+            public string topic
+            {
+                get
+                {
+                    if(callback != null)
+                    {
+                        if (prompt) return '?' + callback.Id;
+                        return callback.Id;
+                    }
+                    return null;
+                }
+            }
 
 
             public TerminalChar()
             {
             }
 
-            public TerminalChar(char text, Color background, Color foreground, string topic = null) : base()
+            public TerminalChar(char text, Color background, Color foreground, JsCallback callback = null, bool prompt = false) : base()
             {
                 this.text = text;
                 this.background = background.Copy();
                 this.foreground = foreground.Copy();
-                this.topic = topic;
+                this.callback = callback;
+                this.prompt = prompt;
             }
 
 

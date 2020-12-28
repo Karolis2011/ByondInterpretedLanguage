@@ -1,4 +1,5 @@
-﻿using ByondLang.ChakraCore.Hosting;
+﻿using ByondLang.ChakraCore;
+using ByondLang.ChakraCore.Hosting;
 using ByondLang.Interface.StateObjects;
 using System;
 using System.Collections.Generic;
@@ -26,15 +27,19 @@ namespace ByondLang.Interface
         {
             if (!callbacks.ContainsKey(hash))
                 throw new Exception("Unknown callback.");
-            var callback = callbacks[hash];
-            _runtime.TimedFunction(() =>
+            var weakCallback = callbacks[hash];
+            JsCallback callback;
+            if (weakCallback.TryGetTarget(out callback))
             {
-                using (new JsContext.Scope(_context))
+                _runtime.TimedFunction(() =>
                 {
-                    JsValue callbackParam = data == null ? JsValue.Null : JsValue.FromString(data);
-                    callback.CallFunction(JsValue.GlobalObject, callbackParam);
-                }
-            }, this, HandleException, JsTaskPriority.CALLBACK);
+                    using (new JsContext.Scope(_context))
+                    {
+                        JsValue callbackParam = data == null ? JsValue.Null : JsValue.FromString(data);
+                        callback.CallbackFunction.CallFunction(JsValue.GlobalObject, callbackParam);
+                    }
+                }, this, HandleException, JsTaskPriority.CALLBACK);
+            }
         }
 
         internal override bool HandleException(Exception exception)
