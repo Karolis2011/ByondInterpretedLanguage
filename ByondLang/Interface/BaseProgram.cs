@@ -77,6 +77,25 @@ namespace ByondLang.Interface
         public virtual void InstallInterfaces()
         {
             // Add generic global APIs accessible from everywhere
+            var glob = JsValue.GlobalObject;
+            glob.SetProperty("btoa", _typeMapper.MTS((Func<JsValue, string>)delegate (JsValue value)
+            {
+                if(value.ValueType != JsValueType.String)
+                {
+                    value = value.ConvertToString();
+                }
+                var plainTextBytes = Encoding.UTF8.GetBytes(value.ToString());
+                return Convert.ToBase64String(plainTextBytes);
+            }), false);
+            glob.SetProperty("atob", _typeMapper.MTS((Func<JsValue, string>)delegate (JsValue value)
+            {
+                if (value.ValueType != JsValueType.String)
+                {
+                    return "";
+                }
+                var plainTextBytes = Convert.FromBase64String(value.ToString());
+                return Encoding.UTF8.GetString(plainTextBytes);
+            }), false);
         }
 
         internal virtual bool HandleException(Exception exception)
