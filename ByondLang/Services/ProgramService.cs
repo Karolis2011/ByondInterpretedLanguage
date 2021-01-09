@@ -87,5 +87,11 @@ namespace ByondLang.Services
             type = ProgramType.None;
             return Task.FromResult(request);
         }
+
+        public void FullDispose()
+        {
+            program?.Dispose();
+            runtime?.Dispose();
+        }
     }
 }

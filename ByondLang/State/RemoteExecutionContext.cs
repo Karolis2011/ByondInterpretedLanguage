@@ -9,7 +9,7 @@ using System.Net.Http;
 
 namespace ByondLang.State
 {
-    public class Program : IDisposable
+    public class RemoteExecutionContext : IDisposable, IExecutionContext
     {
         Process process;
         GrpcChannel channel;
@@ -53,7 +53,7 @@ namespace ByondLang.State
             channel?.Dispose();
         }
 
-        internal void Start(Func<int> portGenerator)
+        public void Start(Func<int> portGenerator, IServiceProvider serviceProvider)
         {
             if(process != null)
             {
@@ -88,7 +88,7 @@ namespace ByondLang.State
         }
 
         // Computer only
-        internal async Task HandleTopic(string topic, string data)
+        public async Task HandleTopic(string topic, string data)
         {
             await client.handleTopicAsync(new Api.TopicRequest() { 
                 TopicId = topic,
@@ -96,7 +96,7 @@ namespace ByondLang.State
             });;
         }
 
-        internal async Task<bool> Recycle()
+        public async Task<bool> Recycle()
         {
             try
             {
