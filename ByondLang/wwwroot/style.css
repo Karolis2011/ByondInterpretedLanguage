@@ -1,0 +1,18 @@
+#consolebuffer,
+#output {
+  white-space: pre-wrap;
+  font-family: Consolas, monaco, monospace;
+}
+
+#source {
+  width: 100%;
+  height: 25em;
+}
+
+.terminal {
+  width: 100%;
+  font-family: monospace;
+  line-height: 1em;
+  font-size: 1em;
+  text-align: center;
+}

@@ -11,23 +11,21 @@ namespace ByondLang.Services
 {
     public class ProgramService : Api.Program.ProgramBase
     {
-        static ProgramType type = ProgramType.None;
-        static BaseProgram program = null;
-        static Runtime runtime;
+        NTSL3StateService _state;
 
-        public ProgramService(IServiceProvider serviceProvider)
+        public ProgramService(NTSL3StateService stateService)
         {
-            runtime = new Runtime(serviceProvider);
+            _state = stateService;
         }
 
         internal async Task NewProgram<T>(Func<Runtime, JsContext, ChakraCore.TypeMapper, T> initializer) where T : BaseProgram
         {
-            program = await runtime.BuildContext(initializer);
+            _state.program = await _state.runtime.BuildContext(initializer);
         }
 
         public override async Task<StatusResponse> status(StatusRequest request, ServerCallContext context)
         {
-            if(program == null)
+            if(_state.program == null)
             {
                 if (request.Initialize)
                 {
@@ -50,9 +48,9 @@ namespace ByondLang.Services
             } 
             var response =  new StatusResponse()
             {
-                Type = type
+                Type = _state.type
             };
-            if(program is ComputerProgram computerProgram)
+            if(_state.program is ComputerProgram computerProgram)
             {
                 response.Terminal = new TerminalState() {
                     Buffer = computerProgram.GetTerminalBuffer()
@@ -63,13 +61,13 @@ namespace ByondLang.Services
 
         public override async Task<VoidMessage> execute(ExecuteRequest request, ServerCallContext context)
         {
-            await program?.ExecuteScript(request.Code);
+            await _state.program?.ExecuteScript(request.Code);
             return new VoidMessage();
         }
 
         public override Task<VoidMessage> handleTopic(TopicRequest request, ServerCallContext context)
         {
-            if(program is ComputerProgram computerProgram)
+            if(_state.program is ComputerProgram computerProgram)
             {
                 computerProgram.HandleTopic(request.TopicId, request.Data);
             }
@@ -82,16 +80,15 @@ namespace ByondLang.Services
 
         public override Task<VoidMessage> recycle(VoidMessage request, ServerCallContext context)
         {
-            program.Dispose();
-            program = null;
-            type = ProgramType.None;
+            _state.program?.Dispose();
+            _state.program = null;
             return Task.FromResult(request);
         }
 
         public void FullDispose()
         {
-            program?.Dispose();
-            runtime?.Dispose();
+            _state.Dispose();
+            _state = null;
         }
     }
 }

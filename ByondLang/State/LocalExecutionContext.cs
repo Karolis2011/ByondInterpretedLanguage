@@ -63,7 +63,7 @@ namespace ByondLang.State
 
         public void Start(Func<int> portGenerator, IServiceProvider serviceProvider)
         {
-            programService = new Services.ProgramService(serviceProvider);
+            programService = new Services.ProgramService(new Services.NTSL3StateService(serviceProvider));
         }
     }
 }

@@ -10,7 +10,7 @@ namespace ByondLang.Interface
     {
         public JsValue CallbackFunction;
         public string Id;
-        private bool disposedValue;
+        protected bool disposedValue;
 
         public JsCallback(string id, JsValue callback)
         {
