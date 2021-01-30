@@ -58,6 +58,8 @@ namespace ByondLang.Services
                 return p;
             } else
             {
+                if (programs.Count + recycledPrograms.Count > _config.GetValue("MaxExecutors", 50))
+                    throw new Exception("Too many running programs.");
                 State.IExecutionContext p;
                 if (_config.GetValue("inProcess", false))
                     p = new State.LocalExecutionContext();
