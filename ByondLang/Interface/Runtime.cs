@@ -61,8 +61,8 @@ namespace ByondLang.Interface
                 using (new JsContext.Scope(context))
                 {
                     task.CallFunction(JsValue.GlobalObject);
+                    task.Release();
                 }
-                task.Release();
             }, priority: JsTaskPriority.PROMISE);
         }
 
