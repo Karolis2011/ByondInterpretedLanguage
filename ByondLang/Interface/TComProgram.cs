@@ -1,4 +1,5 @@
-﻿using ByondLang.ChakraCore.Hosting;
+﻿using ByondLang.ChakraCore;
+using ByondLang.ChakraCore.Hosting;
 using ByondLang.Interface.StateObjects;
 using ByondLang.Models;
 using System;

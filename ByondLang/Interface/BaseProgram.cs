@@ -77,6 +77,7 @@ namespace ByondLang.Interface
         public virtual void InstallInterfaces()
         {
             // Add generic global APIs accessible from everywhere
+
         }
 
         internal virtual bool HandleException(Exception exception)

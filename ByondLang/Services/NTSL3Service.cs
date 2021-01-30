@@ -22,10 +22,6 @@ namespace ByondLang.Services
 
         ~NTSL3Service()
         {
-            foreach (var program in programs)
-            {
-                _ = recycle(program.Value);
-            }
             runtime.Dispose();
         }
 
@@ -76,8 +72,7 @@ namespace ByondLang.Services
             var p = GetProgram(id);
             programs.Remove(id);
 
-            _ = p.Recycle();
-            recycledPrograms.Enqueue(p);
+            p.Dispose();
         }
     }
 }
