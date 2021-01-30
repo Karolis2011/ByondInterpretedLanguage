@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ByondLang.Interface
+namespace ByondLang.ChakraCore
 {
     public class JsPFIFOScheduler : JsScheduler, IDisposable
     {

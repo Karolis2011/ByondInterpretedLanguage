@@ -1,11 +1,12 @@
-﻿using System;
+﻿using ByondLang.Interface;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ByondLang.Interface
+namespace ByondLang.ChakraCore
 {
     public enum JsTaskPriority
     {

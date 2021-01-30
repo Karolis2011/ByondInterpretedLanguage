@@ -1,9 +1,10 @@
-﻿using System;
+﻿using ByondLang.Interface;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ByondLang.Interface
+namespace ByondLang.ChakraCore
 {
     public abstract class JsScheduler
     {
