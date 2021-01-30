@@ -100,7 +100,7 @@ namespace ByondLang.Interface
 
         internal virtual bool HandleException(Exception exception)
         {
-            logger.LogError(exception, "Unhandled runtime exception.");
+            logger?.LogError(exception, "Unhandled runtime exception.");
             return false;
         }
 
