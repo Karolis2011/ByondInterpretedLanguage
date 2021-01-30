@@ -31,7 +31,7 @@ namespace ByondLang.Interface
             _runtime = runtime;
             _context = context;
             _typeMapper = typeMapper;
-            logger = runtime.serviceProvider.GetService<ILogger<BaseProgram>>();
+            logger = runtime.serviceProvider?.GetService<ILogger<BaseProgram>>();
         }
 
         public void InitializeState()
@@ -100,7 +100,7 @@ namespace ByondLang.Interface
 
         internal virtual bool HandleException(Exception exception)
         {
-            logger.LogError(exception, "Unhandled runtime exception.");
+            logger?.LogError(exception, "Unhandled runtime exception.");
             return false;
         }
 

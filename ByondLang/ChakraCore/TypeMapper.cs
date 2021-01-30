@@ -46,6 +46,44 @@ namespace ByondLang.ChakraCore
 		/// Flag indicating whether this object is disposed
 		/// </summary>
 		private readonly InterlockedStatedFlag _disposedFlag = new InterlockedStatedFlag();
+		
+		
+		/// <summary>
+		/// Constructs an instance of type mapper
+		/// </summary>
+		public TypeMapper()
+		{ }
+
+
+		/// <summary>
+		/// Creates a JavaScript value from an host object if the it does not already exist
+		/// </summary>
+		/// <param name="obj">Instance of host type</param>
+		/// <returns>JavaScript value created from an host object</returns>
+		public JsValue GetOrCreateScriptObject(object obj)
+		{
+			if (!_embeddedObjectStorageInitialized)
+			{
+				lock (_embeddedObjectStorageInitializationSynchronizer)
+				{
+					if (!_embeddedObjectStorageInitialized)
+					{
+						_lazyEmbeddedObjects = new ConcurrentDictionary<EmbeddedObjectKey, Lazy<EmbeddedObject>>();
+						_embeddedObjectFinalizeCallback = EmbeddedObjectFinalizeCallback;
+
+						_embeddedObjectStorageInitialized = true;
+					}
+				}
+			}
+
+			var embeddedObjectKey = new EmbeddedObjectKey(obj);
+			EmbeddedObject embeddedObject = _lazyEmbeddedObjects.GetOrAdd(
+				embeddedObjectKey,
+				key => new Lazy<EmbeddedObject>(() => CreateEmbeddedObjectOrFunction(obj))
+			).Value;
+
+			return embeddedObject.ScriptValue;
+		}
 
 		/// <summary>
 		/// Makes a mapping of value from the host type to a script type
@@ -152,37 +190,6 @@ namespace ByondLang.ChakraCore
 		}
 		public object MTH(JsValue value) => MapToHostType(value);
 
-
-		/// <summary>
-		/// Creates a JavaScript value from an host object if the it does not already exist
-		/// </summary>
-		/// <param name="obj">Instance of host type</param>
-		/// <returns>JavaScript value created from an host object</returns>
-		public JsValue GetOrCreateScriptObject(object obj)
-		{
-			if (!_embeddedObjectStorageInitialized)
-			{
-				lock (_embeddedObjectStorageInitializationSynchronizer)
-				{
-					if (!_embeddedObjectStorageInitialized)
-					{
-						_lazyEmbeddedObjects = new ConcurrentDictionary<EmbeddedObjectKey, Lazy<EmbeddedObject>>();
-						_embeddedObjectFinalizeCallback = EmbeddedObjectFinalizeCallback;
-
-						_embeddedObjectStorageInitialized = true;
-					}
-				}
-			}
-
-			var embeddedObjectKey = new EmbeddedObjectKey(obj);
-			EmbeddedObject embeddedObject = _lazyEmbeddedObjects.GetOrAdd(
-				embeddedObjectKey,
-				key => new Lazy<EmbeddedObject>(() => CreateEmbeddedObjectOrFunction(obj))
-			).Value;
-
-			return embeddedObject.ScriptValue;
-		}
-
 		private EmbeddedObject CreateEmbeddedObjectOrFunction(object obj)
 		{
 			var del = obj as Delegate;
@@ -233,93 +240,93 @@ namespace ByondLang.ChakraCore
 				JsValue descriptorValue = JsValue.CreateObject();
 				descriptorValue.SetProperty("enumerable", JsValue.True, true);
 
-                JsValue nativeGetFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
-                {
-                    if (instance && obj == null)
-                    {
-                        CreateAndSetError($"Context error while invoking getter '{fieldName}'.");
-                        return JsValue.Undefined; ;
-                    }
-                    object result;
+				JsNativeFunction nativeGetFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+				{
+					if (instance && obj == null)
+					{
+						CreateAndSetError($"Context error while invoking getter '{fieldName}'.");
+						return JsValue.Undefined;
+					}
+					object result;
 
-                    try
-                    {
-                        result = field.GetValue(obj);
-                    }
-                    catch (Exception e)
-                    {
-                        Exception exception = UnwrapException(e);
-                        var wrapperException = exception as JsException;
-                        JsValue errorValue;
+					try
+					{
+						result = field.GetValue(obj);
+					}
+					catch (Exception e)
+					{
+						Exception exception = UnwrapException(e);
+						var wrapperException = exception as JsException;
+						JsValue errorValue;
 
-                        if (wrapperException != null)
-                        {
-                            errorValue = CreateErrorFromWrapperException(wrapperException);
-                        }
-                        else
-                        {
-                            string errorMessage = instance ?
-                                $"Error ocured while reading field '{fieldName}': {exception.Message}"
-                                :
-                                $"Erorr ocured while reading static field '{fieldName}' from type '{typeName}': {exception.Message}"
-                                ;
-                            errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
-                        }
-                        JsContext.SetException(errorValue);
+						if (wrapperException != null)
+						{
+							errorValue = CreateErrorFromWrapperException(wrapperException);
+						}
+						else
+						{
+							string errorMessage = instance ?
+								$"Error ocured while reading field '{fieldName}': {exception.Message}"
+								:
+								$"Erorr ocured while reading static field '{fieldName}' from type '{typeName}': {exception.Message}"
+								;
+							errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+						}
+						JsContext.SetException(errorValue);
 
-                        return JsValue.Undefined;
-                    }
+						return JsValue.Undefined;
+					}
 
-                    JsValue resultValue = MapToScriptType(result);
+					JsValue resultValue = MapToScriptType(result);
 
-                    return resultValue;
-                }
+					return resultValue;
+				};
                 nativeFunctions.Add(nativeGetFunction);
 
 				JsValue getMethodValue = JsValue.CreateFunction(nativeGetFunction);
 				descriptorValue.SetProperty("get", getMethodValue, true);
 
-                JsValue nativeSetFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
-                {
-                    if (instance && obj == null)
-                    {
-                        CreateAndSetError($"Invalid context got host object field {fieldName}.");
-                        return JsValue.Undefined;
-                    }
+				JsNativeFunction nativeSetFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+				{
+					if (instance && obj == null)
+					{
+						CreateAndSetError($"Invalid context got host object field {fieldName}.");
+						return JsValue.Undefined;
+					}
 
-                    object value = MapToHostType(args[1]);
-                    ReflectionHelpers.FixFieldValueType(ref value, field);
+					object value = MapToHostType(args[1]);
+					ReflectionHelpers.FixFieldValueType(ref value, field);
 
-                    try
-                    {
-                        field.SetValue(obj, value);
-                    }
-                    catch (Exception e)
-                    {
-                        Exception exception = UnwrapException(e);
-                        var wrapperException = exception as JsException;
-                        JsValue errorValue;
+					try
+					{
+						field.SetValue(obj, value);
+					}
+					catch (Exception e)
+					{
+						Exception exception = UnwrapException(e);
+						var wrapperException = exception as JsException;
+						JsValue errorValue;
 
-                        if (wrapperException != null)
-                        {
-                            errorValue = CreateErrorFromWrapperException(wrapperException);
-                        }
-                        else
-                        {
-                            string errorMessage = instance ?
-                                $"Failed to set value for hosts object field '{fieldName}': {exception.Message}"
-                                :
-                                $"Failed to set value for static type '{typeName}' field '{fieldName}': {exception.Message}"
-                                ;
-                            errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
-                        }
-                        JsContext.SetException(errorValue);
+						if (wrapperException != null)
+						{
+							errorValue = CreateErrorFromWrapperException(wrapperException);
+						}
+						else
+						{
+							string errorMessage = instance ?
+								$"Failed to set value for hosts object field '{fieldName}': {exception.Message}"
+								:
+								$"Failed to set value for static type '{typeName}' field '{fieldName}': {exception.Message}"
+								;
+							errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+						}
+						JsContext.SetException(errorValue);
 
-                        return JsValue.Undefined;
-                    }
+						return JsValue.Undefined;
+					}
 
-                    return JsValue.Undefined;
-                }
+					return JsValue.Undefined;
+				};
                 nativeFunctions.Add(nativeSetFunction);
 
 				JsValue setMethodValue = JsValue.CreateFunction(nativeSetFunction);
@@ -534,45 +541,45 @@ namespace ByondLang.ChakraCore
 
 		private EmbeddedObject CreateEmbeddedFunction(Delegate del)
 		{
-            JsValue nativeFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
-            {
-                var methodInfo = del.GetMethodInfo();
-                var parameters = methodInfo.GetParameters();
+			JsNativeFunction nativeFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+			{
+				var methodInfo = del.GetMethodInfo();
+				var parameters = methodInfo.GetParameters();
 
-                if (!IsCompatibleSignature(args.Select(v => v.ValueType).ToArray(), parameters, out ParameterType[] prameterTypes))
-                {
-                    CreateAndSetError($"Method signature is incompatible with passed arguments.");
-                }
-                if (!ProcessFunction(parameters, prameterTypes, args, argCount, out object[] processedArgs))
-                {
-                    CreateAndSetError($"Failed to process arguments.");
-                }
+				if (!IsCompatibleSignature(args.Select(v => v.ValueType).ToArray(), parameters, out ParameterType[] prameterTypes))
+				{
+					CreateAndSetError($"Method signature is incompatible with passed arguments.");
+				}
+				if (!ProcessFunction(parameters, prameterTypes, args, argCount, out object[] processedArgs))
+				{
+					CreateAndSetError($"Failed to process arguments.");
+				}
 
-                object result;
+				object result;
 
-                try
-                {
-                    result = del.DynamicInvoke(processedArgs);
-                }
-                catch (Exception e)
-                {
-                    JsValue undefinedValue = JsValue.Undefined;
-                    Exception exception = UnwrapException(e);
-                    var wrapperException = exception as JsException;
-                    JsValue errorValue = wrapperException != null ?
-                        CreateErrorFromWrapperException(wrapperException)
-                        :
-                        JsValue.CreateError(JsValue.FromString($"Host delegate invocation error: {exception.Message}"));
-                    ;
-                    JsContext.SetException(errorValue);
+				try
+				{
+					result = del.DynamicInvoke(processedArgs);
+				}
+				catch (Exception e)
+				{
+					JsValue undefinedValue = JsValue.Undefined;
+					Exception exception = UnwrapException(e);
+					var wrapperException = exception as JsException;
+					JsValue errorValue = wrapperException != null ?
+						CreateErrorFromWrapperException(wrapperException)
+						:
+						JsValue.CreateError(JsValue.FromString($"Host delegate invocation error: {exception.Message}"));
+					;
+					JsContext.SetException(errorValue);
 
-                    return undefinedValue;
-                }
+					return undefinedValue;
+				}
 
-                JsValue resultValue = MapToScriptType(result);
+				JsValue resultValue = MapToScriptType(result);
 
-                return resultValue;
-            }
+				return resultValue;
+			};
 
             GCHandle delHandle = GCHandle.Alloc(del);
 			IntPtr delPtr = GCHandle.ToIntPtr(delHandle);
@@ -589,38 +596,38 @@ namespace ByondLang.ChakraCore
 
 		private EmbeddedObject CreateEmbeddedFunction(Delegate[] del)
 		{
-            JsValue nativeFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
-            {
-                if (!SelectAndProcessFunction(del, args, argCount, out Delegate selection, out object[] processedArgs))
-                {
-                    CreateAndSetError($"Failed to find appropriate method with {argCount} paramters.");
-                };
+			JsNativeFunction nativeFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+			{
+				if (!SelectAndProcessFunction(del, args, argCount, out Delegate selection, out object[] processedArgs))
+				{
+					CreateAndSetError($"Failed to find appropriate method with {argCount} paramters.");
+				};
 
-                object result;
+				object result;
 
-                try
-                {
-                    result = selection.DynamicInvoke(processedArgs);
-                }
-                catch (Exception e)
-                {
-                    JsValue undefinedValue = JsValue.Undefined;
-                    Exception exception = UnwrapException(e);
-                    var wrapperException = exception as JsException;
-                    JsValue errorValue = wrapperException != null ?
-                        CreateErrorFromWrapperException(wrapperException)
-                        :
-                        JsValue.CreateError(JsValue.FromString($"Host delegate invocation error: {exception.Message}"));
-                    ;
-                    JsContext.SetException(errorValue);
+				try
+				{
+					result = selection.DynamicInvoke(processedArgs);
+				}
+				catch (Exception e)
+				{
+					JsValue undefinedValue = JsValue.Undefined;
+					Exception exception = UnwrapException(e);
+					var wrapperException = exception as JsException;
+					JsValue errorValue = wrapperException != null ?
+						CreateErrorFromWrapperException(wrapperException)
+						:
+						JsValue.CreateError(JsValue.FromString($"Host delegate invocation error: {exception.Message}"));
+					;
+					JsContext.SetException(errorValue);
 
-                    return undefinedValue;
-                }
+					return undefinedValue;
+				}
 
-                JsValue resultValue = MapToScriptType(result);
+				JsValue resultValue = MapToScriptType(result);
 
-                return resultValue;
-            }
+				return resultValue;
+			};
 
             GCHandle delHandle = GCHandle.Alloc(del);
 			IntPtr delPtr = GCHandle.ToIntPtr(delHandle);
