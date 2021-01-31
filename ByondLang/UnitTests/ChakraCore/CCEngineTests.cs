@@ -48,28 +48,6 @@ namespace ByondLang.UnitTests.ChakraCore
         }
 
         [Fact]
-        public void JsTermination()
-        {
-            using (new JsContext.Scope(fixture.context))
-            {
-                using (var timer = new Timer(state => fixture.runtime.Disabled = true))
-                {
-                    timer.Change(100, Timeout.Infinite);
-                    try
-                    {
-                        JsContext.RunScript("while(true){}");
-                    }
-                    catch (JsScriptException ex)
-                    {
-                        if(ex.ErrorCode != JsErrorCode.ScriptTerminated)
-                            throw;
-                    }
-                }
-                fixture.runtime.Disabled = false;
-            }
-        }
-
-        [Fact]
         public void TMFunction()
         {
             using (new JsContext.Scope(fixture.context))
