@@ -14,11 +14,11 @@ namespace ByondLang.UnitTests.StateTests
         {
             using (var runtime = new Runtime(null))
             {
-                var program = await runtime.BuildContext((r, c, m) => new BaseProgram(r, c, m));
+                using (var program = await runtime.BuildContext((r, c, m) => new BaseProgram(r, c, m))) {
+                    var result = program.ExecuteScript("Math.PI * (5+2)");
 
-                var result = program.ExecuteScript("Math.PI * (5+2)");
-
-                result.Wait();
+                    result.Wait();
+                }
             }
         }
     }

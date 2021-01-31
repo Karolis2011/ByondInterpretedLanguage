@@ -24,6 +24,7 @@ namespace ByondLang.Interface
         protected Task lastExecutionTask;
         protected Dictionary<string, WeakReference<JsCallback>> callbacks = new Dictionary<string, WeakReference<JsCallback>>();
         private ILogger<BaseProgram> logger;
+        private bool disposedValue;
 
         public BaseProgram(Runtime runtime, JsContext context, TypeMapper typeMapper)
         {
@@ -43,13 +44,6 @@ namespace ByondLang.Interface
                     InstallInterfaces();
                 }
             }, this, priority: JsTaskPriority.INITIALIZATION);
-        }
-
-        public void Dispose()
-        {
-            _runtime.RemoveContext(this);
-            callbacks.Clear();
-            _context.Release();
         }
 
         internal JsCallback RegisterCallback(JsValue callback)
@@ -113,6 +107,32 @@ namespace ByondLang.Interface
                     return JsContext.RunScript(script);
                 }
             }, this, HandleException, JsTaskPriority.EXECUTION);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    _runtime.RemoveContext(this);
+                    callbacks.Clear();
+                }
+                _context.Release();
+
+                disposedValue = true;
+            }
+        }
+
+        ~BaseProgram()
+        {
+            Dispose(disposing: false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

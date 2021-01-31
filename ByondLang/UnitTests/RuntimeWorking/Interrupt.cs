@@ -14,12 +14,13 @@ namespace ByondLang.UnitTests.RuntimeWorking
         {
             using (var runtime = new Runtime(null))
             {
-                var program = await runtime.BuildContext((r, c, m) => new TestProgram(r, c, m));
+                using (var program = await runtime.BuildContext((r, c, m) => new TestProgram(r, c, m)))
+                {
+                    var result = program.ExecuteScript("while(true) {}");
 
-                var result = program.ExecuteScript("while(true) {}");
-
-                Assert.True(result.Wait(2100));
-                Assert.False(program.HasErrored);
+                    Assert.True(result.Wait(2100));
+                    Assert.False(program.HasErrored);
+                }
             }
         }
 
@@ -28,12 +29,13 @@ namespace ByondLang.UnitTests.RuntimeWorking
         {
             using (var runtime = new Runtime(null))
             {
-                var program = await runtime.BuildContext((r, c, m) => new TestProgram(r, c, m));
+                using (var program = await runtime.BuildContext((r, c, m) => new TestProgram(r, c, m)))
+                {
+                    var result = program.ExecuteScript("while(true) {atob('QQ==')}");
 
-                var result = program.ExecuteScript("while(true) {atob('QQ==')}");
-
-                result.Wait();
-                Assert.False(program.HasErrored);
+                    Assert.True(result.Wait(2100));
+                    Assert.False(program.HasErrored);
+                }
             }
         }
     }
