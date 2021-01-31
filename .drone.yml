@@ -13,3 +13,8 @@ steps:
   - dotnet restore
   - dotnet build --configuration Release --no-restore
   - dotnet test --no-restore --verbosity normal
+---
+kind: signature
+hmac: 88434e64e8a95a90ccdd50281b31dbae22e659c39205ac110ff3c955f2865799
+
+...
