@@ -7,7 +7,7 @@ using Xunit;
 
 namespace ByondLang.UnitTests.RuntimeWorking
 {
-    public class Interrupt
+    public class InterruptTests
     {
         [Fact]
         public async void SimpleWhileTrue()
@@ -18,7 +18,7 @@ namespace ByondLang.UnitTests.RuntimeWorking
                 {
                     var result = program.ExecuteScript("while(true) {}");
 
-                    Assert.True(result.Wait(2100));
+                    Assert.True(result.Wait(5000));
                     Assert.False(program.HasErrored);
                 }
             }
@@ -33,7 +33,7 @@ namespace ByondLang.UnitTests.RuntimeWorking
                 {
                     var result = program.ExecuteScript("while(true) {atob('QQ==')}");
 
-                    Assert.True(result.Wait(2100));
+                    Assert.True(result.Wait(5000));
                     Assert.False(program.HasErrored);
                 }
             }

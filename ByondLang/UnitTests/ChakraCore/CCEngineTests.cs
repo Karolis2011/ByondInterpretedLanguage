@@ -61,7 +61,7 @@ namespace ByondLang.UnitTests.ChakraCore
                 };
                 gob.SetProperty("fun", fixture.typeMapper.MapToScriptType(del), true);
                 var result = JsContext.RunScript("fun(5)");
-                var finalResult = fixture.typeMapper.MapToHostType(result);
+                var finalResult = result.ToString();
                 Assert.Equal(5, flag);
                 Assert.Equal("Win!", finalResult);
             }
