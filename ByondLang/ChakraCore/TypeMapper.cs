@@ -357,8 +357,8 @@ namespace ByondLang.ChakraCore
 
 				if (property.GetGetMethod() != null)
 				{
-                    JsValue nativeGetFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
-                    {
+					JsNativeFunction nativeGetFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+					{
                         if (instance && obj == null)
                         {
                             CreateAndSetError($"Invalid context for '{propertyName}' property.");
@@ -407,8 +407,8 @@ namespace ByondLang.ChakraCore
 
 				if (property.GetSetMethod() != null)
 				{
-                    JsValue nativeSetFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
-                    {
+					JsNativeFunction nativeSetFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+					{
                         JsValue undefinedValue = JsValue.Undefined;
 
                         if (instance && obj == null)
@@ -479,54 +479,54 @@ namespace ByondLang.ChakraCore
 				string methodName = methodGroup.Key;
 				MethodInfo[] methodCandidates = methodGroup.Select(m => m.Info).ToArray();
 
-                JsValue nativeFunction(JsValue callee, bool isConstructCall, JsValue[] args, ushort argCount, IntPtr callbackData)
-                {
-                    if (instance && obj == null)
-                    {
-                        CreateAndSetError($"Invalid context while calling method '{methodName}'.");
-                        return JsValue.Undefined;
-                    }
+				JsNativeFunction nativeFunction = (callee, isConstructCall, args, argCount, callbackData) =>
+				{
+					if (instance && obj == null)
+					{
+						CreateAndSetError($"Invalid context while calling method '{methodName}'.");
+						return JsValue.Undefined;
+					}
 
-                    if (!SelectAndProcessFunction(methodCandidates, args, argCount, out MethodInfo bestSelection, out object[] processedArgs))
-                    {
-                        CreateAndSetError($"Suitable method '{methodName}' was not found.");
-                        return JsValue.Undefined;
-                    }
+					if (!SelectAndProcessFunction(methodCandidates, args, argCount, out MethodInfo bestSelection, out object[] processedArgs))
+					{
+						CreateAndSetError($"Suitable method '{methodName}' was not found.");
+						return JsValue.Undefined;
+					}
 
-                    object result;
+					object result;
 
-                    try
-                    {
-                        result = bestSelection.Invoke(obj, processedArgs);
-                    }
-                    catch (Exception e)
-                    {
-                        Exception exception = UnwrapException(e);
-                        var wrapperException = exception as JsException;
-                        JsValue errorValue;
+					try
+					{
+						result = bestSelection.Invoke(obj, processedArgs);
+					}
+					catch (Exception e)
+					{
+						Exception exception = UnwrapException(e);
+						var wrapperException = exception as JsException;
+						JsValue errorValue;
 
-                        if (wrapperException != null)
-                        {
-                            errorValue = CreateErrorFromWrapperException(wrapperException);
-                        }
-                        else
-                        {
-                            string errorMessage = instance ?
-                                $"Host method '{methodName}' invocation error: {exception.Message}"
-                                :
-                                $"Host static type '{typeName}' method '{methodName}' invocation error: {exception.Message}"
-                                ;
-                            errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
-                        }
-                        JsContext.SetException(errorValue);
+						if (wrapperException != null)
+						{
+							errorValue = CreateErrorFromWrapperException(wrapperException);
+						}
+						else
+						{
+							string errorMessage = instance ?
+								$"Host method '{methodName}' invocation error: {exception.Message}"
+								:
+								$"Host static type '{typeName}' method '{methodName}' invocation error: {exception.Message}"
+								;
+							errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+						}
+						JsContext.SetException(errorValue);
 
-                        return JsValue.Undefined;
-                    }
+						return JsValue.Undefined;
+					}
 
-                    JsValue resultValue = MapToScriptType(result);
+					JsValue resultValue = MapToScriptType(result);
 
-                    return resultValue;
-                }
+					return resultValue;
+				};
                 nativeFunctions.Add(nativeFunction);
 
 				JsValue methodValue = JsValue.CreateNamedFunction(methodName, nativeFunction);
