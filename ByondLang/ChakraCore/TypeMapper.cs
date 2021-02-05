@@ -359,46 +359,46 @@ namespace ByondLang.ChakraCore
 				{
 					JsNativeFunction nativeGetFunction = (callee, isConstructCall, args, argCount, callbackData) =>
 					{
-                        if (instance && obj == null)
-                        {
-                            CreateAndSetError($"Invalid context for '{propertyName}' property.");
-                            return JsValue.Undefined;
-                        }
+						if (instance && obj == null)
+						{
+							CreateAndSetError($"Invalid context for '{propertyName}' property.");
+							return JsValue.Undefined;
+						}
 
-                        object result;
+						object result;
 
-                        try
-                        {
-                            result = property.GetValue(obj, new object[0]);
-                        }
-                        catch (Exception e)
-                        {
-                            Exception exception = UnwrapException(e);
-                            var wrapperException = exception as JsException;
-                            JsValue errorValue;
+						try
+						{
+							result = property.GetValue(obj, new object[0]);
+						}
+						catch (Exception e)
+						{
+							Exception exception = UnwrapException(e);
+							var wrapperException = exception as JsException;
+							JsValue errorValue;
 
-                            if (wrapperException != null)
-                            {
-                                errorValue = CreateErrorFromWrapperException(wrapperException);
-                            }
-                            else
-                            {
-                                string errorMessage = instance ?
-                                    $"Property '{propertyName}' get operation failed: {exception.Message}"
-                                    :
-                                    $"Property '{propertyName}' of static type '{typeName}' get operation failed: {exception.Message}"
-                                    ;
-                                errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
-                            }
-                            JsContext.SetException(errorValue);
+							if (wrapperException != null)
+							{
+								errorValue = CreateErrorFromWrapperException(wrapperException);
+							}
+							else
+							{
+								string errorMessage = instance ?
+									$"Property '{propertyName}' get operation failed: {exception.Message}"
+									:
+									$"Property '{propertyName}' of static type '{typeName}' get operation failed: {exception.Message}"
+									;
+								errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+							}
+							JsContext.SetException(errorValue);
 
-                            return JsValue.Undefined;
-                        }
+							return JsValue.Undefined;
+						}
 
-                        JsValue resultValue = MapToScriptType(result);
+						JsValue resultValue = MapToScriptType(result);
 
-                        return resultValue;
-                    }
+						return resultValue;
+					};
                     nativeFunctions.Add(nativeGetFunction);
 
 					JsValue getMethodValue = JsValue.CreateFunction(nativeGetFunction);
@@ -409,47 +409,47 @@ namespace ByondLang.ChakraCore
 				{
 					JsNativeFunction nativeSetFunction = (callee, isConstructCall, args, argCount, callbackData) =>
 					{
-                        JsValue undefinedValue = JsValue.Undefined;
+						JsValue undefinedValue = JsValue.Undefined;
 
-                        if (instance && obj == null)
-                        {
-                            CreateAndSetError($"Invalid context for '{propertyName}' property.");
-                            return undefinedValue;
-                        }
+						if (instance && obj == null)
+						{
+							CreateAndSetError($"Invalid context for '{propertyName}' property.");
+							return undefinedValue;
+						}
 
-                        object value = MapToHostType(args[1]);
-                        ReflectionHelpers.FixPropertyValueType(ref value, property);
+						object value = MapToHostType(args[1]);
+						ReflectionHelpers.FixPropertyValueType(ref value, property);
 
-                        try
-                        {
-                            property.SetValue(obj, value, new object[0]);
-                        }
-                        catch (Exception e)
-                        {
-                            Exception exception = UnwrapException(e);
-                            var wrapperException = exception as JsException;
-                            JsValue errorValue;
+						try
+						{
+							property.SetValue(obj, value, new object[0]);
+						}
+						catch (Exception e)
+						{
+							Exception exception = UnwrapException(e);
+							var wrapperException = exception as JsException;
+							JsValue errorValue;
 
-                            if (wrapperException != null)
-                            {
-                                errorValue = CreateErrorFromWrapperException(wrapperException);
-                            }
-                            else
-                            {
-                                string errorMessage = instance ?
-                                    $"Host object property '{propertyName}' setting failed: {exception.Message}"
-                                    :
-                                    $"Host type '{typeName}' property '{propertyName}' setting failed: {exception.Message}"
-                                    ;
-                                errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
-                            }
-                            JsContext.SetException(errorValue);
+							if (wrapperException != null)
+							{
+								errorValue = CreateErrorFromWrapperException(wrapperException);
+							}
+							else
+							{
+								string errorMessage = instance ?
+									$"Host object property '{propertyName}' setting failed: {exception.Message}"
+									:
+									$"Host type '{typeName}' property '{propertyName}' setting failed: {exception.Message}"
+									;
+								errorValue = JsValue.CreateError(JsValue.FromString(errorMessage));
+							}
+							JsContext.SetException(errorValue);
 
-                            return undefinedValue;
-                        }
+							return undefinedValue;
+						}
 
-                        return undefinedValue;
-                    }
+						return undefinedValue;
+					};
                     nativeFunctions.Add(nativeSetFunction);
 
 					JsValue setMethodValue = JsValue.CreateFunction(nativeSetFunction);

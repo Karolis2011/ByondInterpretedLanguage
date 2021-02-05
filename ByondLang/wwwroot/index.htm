@@ -1,0 +1,111 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>NTSL2++ DM-less emulator.</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css"
+      rel="stylesheet"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
+    />
+    <style>
+      .terminal {
+        width: 100%;
+        font-family: monospace;
+        line-height: 1em;
+        font-size: 1em;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <v-app>
+        <v-main>
+          <v-container>
+            <div>
+              <v-alert :type="alert.type">
+                {{ alert.message }}
+              </v-alert>
+              <v-menu offset-y v-if="programType == null">
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn color="primary" dark v-bind="attrs" v-on="on">
+                    Create
+                  </v-btn>
+                </template>
+                <v-list>
+                  <v-list-item @click="createProgram('Computer')">
+                    <v-list-item-title>Computer program</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+              <template v-else>
+                <v-btn color="primary" dark @click="execute()">
+                  Execute
+                </v-btn>
+                <v-btn color="red" dark @click="remove()">
+                  Dispose program
+                </v-btn>
+                <template v-if="programType == 'Computer'">
+                  <v-btn color="secondary" dark @click="update_console_buffer()">
+                    Update
+                  </v-btn>
+                  
+                </template>
+              </template>
+              <v-btn class="float-right" color="red" dark @click="reset()">
+                Reset daemon
+              </v-btn>
+              <hr>
+
+              <div>
+                <h3>Options:</h3>
+                <template v-if="programType == 'Computer'">
+                  <v-checkbox v-model="console_buffer_auto_update" label="Auto update console buffer"></v-checkbox>
+                </template>
+              </div>
+            </div>
+
+            <editor class="mt-2" v-if="programType != null" v-model="script"></editor>
+            <hr>
+            <component class="mt-2" v-if="console_buffer != null" :is="term"/>
+          </v-container>
+        </v-main>
+      </v-app>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ace.min.js"
+      integrity="sha256-qCCcAHv/Z0u7K344shsZKUF2NR+59ooA3XWRj0LPGIQ="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/mode-javascript.min.js"
+      integrity="sha256-cN39Ofb0/L/HOBScgDuoNefcVF4+MKdAsxXR3g/xyZw="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/theme-monokai.min.js"
+      integrity="sha256-QjbDa92d4Q3oBUXnKXRhOrz8eONu3odsIlDHnNwg4y4="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ext-language_tools.min.js"
+      integrity="sha256-KFXf4u8zJlXEUJckmmZbITzYENXMuqPqyrlscCKeqFU="
+      crossorigin="anonymous"
+    ></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
