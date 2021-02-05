@@ -1,0 +1,68 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>NTSL2++ DM-less emulator.</title>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="head_script.js"></script>
+  </head>
+
+  <body>
+    <button onClick="create_program_com()">Create console program</button>
+    <!-- <button onClick="create_program_tcom()">Create TCom program</button> -->
+    <button onClick="remove_program()">Delete program</button>
+    <button onClick="exec_program()">Execute</button>
+    <button onClick="get_buffer()">Get buffer</button>
+    <button onClick="reset()">!!Reset</button>
+    <hr />
+    <pre id="source">Term.write("AAAA")
+if(5 * 3)
+  Term.write(2^8)</pre>
+    <hr />
+    <div id="consolebuffer"></div>
+    <hr />
+    <div id="output"></div>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ace.min.js"
+      integrity="sha256-qCCcAHv/Z0u7K344shsZKUF2NR+59ooA3XWRj0LPGIQ="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/mode-javascript.min.js"
+      integrity="sha256-cN39Ofb0/L/HOBScgDuoNefcVF4+MKdAsxXR3g/xyZw="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/theme-monokai.min.js"
+      integrity="sha256-QjbDa92d4Q3oBUXnKXRhOrz8eONu3odsIlDHnNwg4y4="
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ext-language_tools.min.js"
+      integrity="sha256-KFXf4u8zJlXEUJckmmZbITzYENXMuqPqyrlscCKeqFU="
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+      ace.config.set(
+        "basePath",
+        "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/"
+      );
+      ace.require("ace/ext/language_tools");
+      window.editor = ace.edit("source");
+      editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
+        enableSnippets: true,
+      });
+      editor.setTheme("ace/theme/monokai");
+      editor.session.setMode("ace/mode/javascript");
+    </script>
+    <script src="script.js"></script>
+  </body>
+</html>

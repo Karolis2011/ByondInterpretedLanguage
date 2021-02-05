@@ -1,0 +1,19 @@
+---
+kind: pipeline
+type: docker
+name: Tests
+
+clone:
+  depth: 50
+
+steps:
+- name: Tests
+  image: mcr.microsoft.com/dotnet/sdk:5.0
+  commands:
+  - dotnet restore
+  - dotnet test --no-restore --verbosity normal
+---
+kind: signature
+hmac: 8a7ee0e2695ddffa1dcfd859a332a10334a1683cf856fb24f4a858e23e6d5303
+
+...
