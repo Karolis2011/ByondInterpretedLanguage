@@ -76,6 +76,9 @@ const to = {
     '<span style="cursor: pointer;" @click.prevent="invoke"><slot/></span>',
 };
 
+Vue.component('debugger', {
+
+})
 
 const scriptPresets = {
   Computer: `Term.write("AAAA")
@@ -143,7 +146,7 @@ var app = new Vue({
           code: this.script
         }
       }).then(r => {
-        if(r.data)
+        if(!r.data)
           return
         this.a('success', 'Executed script.')
       })

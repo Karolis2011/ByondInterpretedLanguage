@@ -61,6 +61,14 @@ namespace ByondLang.State
             return Task.FromResult(true);
         }
 
+        public async Task SetDebuggingState(bool state)
+        {
+            await programService.setDebugingState(new DebugingState()
+            {
+                Enabled = state
+            }, null);
+        }
+
         public void Start(Func<int> portGenerator, IServiceProvider serviceProvider)
         {
             programService = new Services.ProgramService(new Services.NTSL3StateService(serviceProvider));

@@ -18,11 +18,6 @@ namespace ByondLang.Services
             _state = stateService;
         }
 
-        internal async Task NewProgram<T>(Func<Runtime, JsContext, ChakraCore.TypeMapper, T> initializer) where T : BaseProgram
-        {
-            _state.program = await _state.runtime.BuildContext(initializer);
-        }
-
         public override async Task<StatusResponse> status(StatusRequest request, ServerCallContext context)
         {
             if(_state.program == null)
@@ -34,7 +29,8 @@ namespace ByondLang.Services
                         case ProgramType.None:
                             throw new Exception("Unspecified program type");
                         case ProgramType.ComputerProgram:
-                            await NewProgram((r, c, tm) => new ComputerProgram(r, c, tm));
+                            _state.program = new ComputerProgram(_state.serviceProvider);
+                            await _state.program.InitializeState();
                             break;
                         default:
                             break;
@@ -83,6 +79,12 @@ namespace ByondLang.Services
             _state.program?.Dispose();
             _state.program = null;
             return Task.FromResult(request);
+        }
+
+        public override Task<VoidMessage> setDebugingState(DebugingState request, ServerCallContext context)
+        {
+
+            return Task.FromResult(new VoidMessage());
         }
 
         public void FullDispose()

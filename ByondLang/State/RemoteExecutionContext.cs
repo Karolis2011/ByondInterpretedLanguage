@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using Grpc.Net.Client;
 using System.Net.Http;
+using ByondLang.Api;
 
 namespace ByondLang.State
 {
@@ -90,7 +91,7 @@ namespace ByondLang.State
         // Computer only
         public async Task HandleTopic(string topic, string data)
         {
-            await client.handleTopicAsync(new Api.TopicRequest() { 
+            await client.handleTopicAsync(new TopicRequest() { 
                 TopicId = topic,
                 Data = data
             });;
@@ -100,7 +101,7 @@ namespace ByondLang.State
         {
             try
             {
-                await client.recycleAsync(new Api.VoidMessage());
+                await client.recycleAsync(new VoidMessage());
                 lastStatus = null;
                 return true;
             }
@@ -109,6 +110,15 @@ namespace ByondLang.State
                 return false;
             }
             
+        }
+
+        public async Task SetDebuggingState(bool state)
+        {
+            await client.setDebugingStateAsync(new DebugingState()
+            {
+                Enabled = state
+            });
+            lastStatus = null;
         }
     }
 }

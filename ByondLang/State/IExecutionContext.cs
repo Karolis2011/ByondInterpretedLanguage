@@ -13,5 +13,6 @@ namespace ByondLang.State
         void Start(Func<int> portGenerator, IServiceProvider serviceProvider);
         Task HandleTopic(string topic, string data);
         Task<bool> Recycle();
+        Task SetDebuggingState(bool state);
     }
 }

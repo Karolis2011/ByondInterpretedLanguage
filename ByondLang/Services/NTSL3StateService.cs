@@ -11,17 +11,16 @@ namespace ByondLang.Services
     {
         public ProgramType type = ProgramType.None;
         public BaseProgram program = null;
-        public Runtime runtime;
+        public IServiceProvider serviceProvider = null;
 
         public NTSL3StateService(IServiceProvider serviceProvider)
         {
-            runtime = new Runtime(serviceProvider);
+            this.serviceProvider = serviceProvider;
         }
 
         public void Dispose()
         {
             program?.Dispose();
-            runtime.Dispose();
         }
     }
 }

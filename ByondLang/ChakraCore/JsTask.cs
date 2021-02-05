@@ -30,7 +30,6 @@ namespace ByondLang.ChakraCore
     {
         public bool IsCompleted => State == JsTaskState.Failed || State == JsTaskState.Complete;
         public JsTaskPriority Priority { get; protected set; }
-        public BaseProgram Program { get; protected set; }
         public JsTaskState State { get; protected set; } = JsTaskState.Initialized;
 
         private Action m_action;
@@ -38,10 +37,9 @@ namespace ByondLang.ChakraCore
 
         protected JsTask() { }
 
-        public JsTask(Action function, JsTaskPriority priority = JsTaskPriority.LOWEST, BaseProgram program = null)
+        public JsTask(Action function, JsTaskPriority priority = JsTaskPriority.LOWEST)
         {
             m_action = function;
-            Program = program;
             Priority = priority;
         }
 
@@ -78,6 +76,12 @@ namespace ByondLang.ChakraCore
             return this; 
         }
 
+        public JsTask StartDebug(JsScheduler scheduler)
+        {
+            scheduler.QueueTaskDebug(this);
+            return this;
+        }
+
         public JsTaskAwaiter GetAwaiter()
         {
             return new JsTaskAwaiter(this);
@@ -103,7 +107,6 @@ namespace ByondLang.ChakraCore
         public JsTask(Func<TResult> function, JsTaskPriority priority = JsTaskPriority.LOWEST, BaseProgram program = null)
         {
             m_action = function;
-            Program = program;
             Priority = priority;
         }
 
@@ -148,6 +151,12 @@ namespace ByondLang.ChakraCore
         public new JsTask<TResult> Start(JsScheduler scheduler)
         {
             scheduler.QueueTask(this);
+            return this;
+        }
+
+        public new JsTask<TResult> StartDebug(JsScheduler scheduler)
+        {
+            scheduler.QueueTaskDebug(this);
             return this;
         }
 

@@ -10,7 +10,7 @@ namespace ByondLang.Interface
     {
         public bool HasErrored { get; private set; } = false;
 
-        public TestProgram(Runtime runtime, JsContext context, ChakraCore.TypeMapper typeMapper) : base(runtime, context, typeMapper)
+        public TestProgram(IServiceProvider serviceProvider) : base(serviceProvider)
         {
         }
 

@@ -13,7 +13,7 @@ namespace ByondLang.Interface
         internal Terminal terminal;
         public string ComputerRef { get; private set; }
 
-        public ComputerProgram(Runtime runtime, JsContext context, ChakraCore.TypeMapper typeMapper) : base(runtime, context, typeMapper)
+        public ComputerProgram(IServiceProvider serviceProvider) : base(serviceProvider)
         {
             terminal = new Terminal(this);
         }
@@ -31,14 +31,14 @@ namespace ByondLang.Interface
             JsCallback callback;
             if (weakCallback.TryGetTarget(out callback))
             {
-                _runtime.TimedFunction(() =>
+                TimedFunction(() =>
                 {
-                    using (new JsContext.Scope(_context))
+                    using (new JsContext.Scope(context))
                     {
                         JsValue callbackParam = data == null ? JsValue.Null : JsValue.FromString(data);
                         callback.CallbackFunction.CallFunction(JsValue.GlobalObject, callbackParam);
                     }
-                }, this, HandleException, JsTaskPriority.CALLBACK);
+                }, HandleException, JsTaskPriority.CALLBACK);
             }
         }
 
@@ -59,7 +59,7 @@ namespace ByondLang.Interface
             base.InstallInterfaces();
             // Install APIs: term
             var glob = JsValue.GlobalObject;
-            glob.SetProperty("Term", _typeMapper.MTS(terminal), true); ;
+            glob.SetProperty("Term", typeMapper.MTS(terminal), true); ;
         }
     }
 }
