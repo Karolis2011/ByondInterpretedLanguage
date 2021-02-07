@@ -528,6 +528,249 @@ namespace ByondLang.ChakraCore.Hosting
         [DllImport(DllName)]
         internal static extern JsErrorCode JsDiagGetBreakpoints(uint scriptId, uint lineNumber, uint columnNumber, out JsValue breakpoint);
 
+        /// <summary>
+        ///     Remove a breakpoint.
+        /// </summary>
+        /// <param name="breakpointId">Breakpoint id returned from JsDiagSetBreakpoint.</param>
+        /// <returns>
+        ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+        /// </returns>
+        /// <remarks>
+        ///     The current runtime should be in debug state. This API can be called when runtime is at a break or running.
+        /// </remarks>
+        [DllImport(DllName)]
+        internal static extern JsErrorCode JsDiagRemoveBreakpoint(uint scriptIdbreakpointId);
+
+        /// <summary>
+        ///     Sets break on exception handling.
+        /// </summary>
+        /// <param name="runtime">Runtime to set break on exception attributes.</param>
+        /// <param name="exceptionAttributes">Mask of JsDiagBreakOnExceptionAttributes to set.</param>
+        /// <remarks>
+        ///     <para>
+        ///         If this API is not called the default value is set to JsDiagBreakOnExceptionAttributeUncaught in the runtime.
+        ///     </para>
+        /// </remarks>
+        /// <returns>
+        ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+        /// </returns>
+        /// <remarks>
+        ///     The runtime should be in debug state. This API can be called from another runtime.
+        /// </remarks>
+        [DllImport(DllName)]
+        internal static extern JsErrorCode JsDiagSetBreakOnException(JsRuntime runtime, JsDiagBreakOnExceptionAttributes exceptionAttributes);
+
+        /// <summary>
+        ///     Gets break on exception setting.
+        /// </summary>
+        /// <param name="runtime">Runtime from which to get break on exception attributes, should be in debug mode.</param>
+        /// <param name="exceptionAttributes">Mask of JsDiagBreakOnExceptionAttributes.</param>
+        /// <returns>
+        ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+        /// </returns>
+        /// <remarks>
+        ///     The runtime should be in debug state. This API can be called from another runtime.
+        /// </remarks>
+        [DllImport(DllName)]
+        internal static extern JsErrorCode JsDiagGetBreakOnException(JsRuntime runtime, out JsDiagBreakOnExceptionAttributes exceptionAttributes);
+
+        /// <summary>
+        ///     Sets the step type in the runtime after a debug break.
+        /// </summary>
+        /// <remarks>
+        ///     Requires to be at a debug break.
+        /// </remarks>
+        /// <param name="stepType">Type of JsDiagStepType.</param>
+        /// <returns>
+        ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+        /// </returns>
+        /// <remarks>
+        ///     The current runtime should be in debug state. This API can only be called when runtime is at a break.
+        /// </remarks>
+        [DllImport(DllName)]
+        internal static extern JsErrorCode JsDiagSetStepType(JsDiagStepType stepType);
+
+        /// <summary>
+        ///     Gets list of scripts.
+        /// </summary>
+        /// <param name="scriptsArray">Array of script objects.</param>
+        /// <remarks>
+        ///     <para>
+        ///     [{
+        ///         "scriptId" : 2,
+        ///         "fileName" : "c:\\Test\\Test.js",
+        ///         "lineCount" : 4,
+        ///         "sourceLength" : 111
+        ///       }, {
+        ///         "scriptId" : 3,
+        ///         "parentScriptId" : 2,
+        ///         "scriptType" : "eval code",
+        ///         "lineCount" : 1,
+        ///         "sourceLength" : 12
+        ///     }]
+        ///     </para>
+        /// </remarks>
+        /// <returns>
+        ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+        /// </returns>
+        /// <remarks>
+        ///     The current runtime should be in debug state. This API can be called when runtime is at a break or running.
+        /// </remarks>
+        [DllImport(DllName)]
+        internal static extern JsErrorCode JsDiagGetScripts(out JsValue scriptsArray);
+
+        /// <summary>
+        ///     Gets source for a specific script identified by scriptId from JsDiagGetScripts.
+        /// </summary>
+        /// <param name="scriptId">Id of the script.</param>
+        /// <param name="source">Source object.</param>
+        /// <remarks>
+        ///     <para>
+        ///     {
+        ///         "scriptId" : 1,
+        ///         "fileName" : "c:\\Test\\Test.js",
+        ///         "lineCount" : 12,
+        ///         "sourceLength" : 15154,
+        ///         "source" : "var x = 1;"
+        ///     }
+        ///     </para>
+        /// </remarks>
+        /// <returns>
+        ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+        /// </returns>
+        /// <remarks>
+        ///     The current runtime should be in debug state. This API can be called when runtime is at a break or running.
+        /// </remarks>
+        [DllImport(DllName)]
+        internal static extern JsErrorCode JsDiagGetSource(uint scriptId, out JsValue source);
+
+        /// <summary>
+        ///     Gets the source information for a function object.
+        /// </summary>
+        /// <param name="function">JavaScript function.</param>
+        /// <param name="functionPosition">Function position - scriptId, start line, start column, line number of first statement, column number of first statement.</param>
+        /// <remarks>
+        ///     <para>
+        ///     {
+        ///         "scriptId" : 1,
+        ///         "fileName" : "c:\\Test\\Test.js",
+        ///         "line" : 1,
+        ///         "column" : 2,
+        ///         "firstStatementLine" : 6,
+        ///         "firstStatementColumn" : 0
+        ///     }
+        ///     </para>
+        /// </remarks>
+        /// <returns>
+        ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+        /// </returns>
+        /// <remarks>
+        ///     This API can be called when runtime is at a break or running.
+        /// </remarks>
+        [DllImport(DllName)]
+        internal static extern JsErrorCode JsDiagGetFunctionPosition(JsValue function, out JsValue functionPosition);
+
+        /// <summary>
+        ///     Gets the stack trace information.
+        /// </summary>
+        /// <param name="stackTrace">Stack trace information.</param>
+        /// <remarks>
+        ///     <para>
+        ///     [{
+        ///         "index" : 0,
+        ///         "scriptId" : 2,
+        ///         "line" : 3,
+        ///         "column" : 0,
+        ///         "sourceLength" : 9,
+        ///         "sourceText" : "var x = 1",
+        ///         "functionHandle" : 1
+        ///     }]
+        ///    </para>
+        /// </remarks>
+        /// <returns>
+        ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+        /// </returns>
+        /// <remarks>
+        ///     The current runtime should be in debug state. This API can only be called when runtime is at a break.
+        /// </remarks>
+        [DllImport(DllName)]
+        internal static extern JsErrorCode JsDiagGetStackTrace(out JsValue stackTrace);
+
+        /// <summary>
+        ///     Gets the list of properties corresponding to the frame.
+        /// </summary>
+        /// <param name="stackFrameIndex">Index of stack frame from JsDiagGetStackTrace.</param>
+        /// <param name="properties">Object of properties array (properties, scopes and globals).</param>
+        /// <remarks>
+        ///     <para>
+        ///     propertyAttributes is a bit mask of
+        ///         NONE = 0x1,
+        ///         HAVE_CHILDRENS = 0x2,
+        ///         READ_ONLY_VALUE = 0x4,
+        ///         IN_TDZ = 0x8,
+        ///     </para>
+        ///     <para>
+        ///     {
+        ///         "thisObject": {
+        ///             "name": "this",
+        ///             "type" : "object",
+        ///             "className" : "Object",
+        ///             "display" : "{...}",
+        ///             "propertyAttributes" : 1,
+        ///             "handle" : 306
+        ///         },
+        ///         "exception" : {
+        ///             "name" : "{exception}",
+        ///             "type" : "object",
+        ///             "display" : "'a' is undefined",
+        ///             "className" : "Error",
+        ///             "propertyAttributes" : 1,
+        ///             "handle" : 307
+        ///         }
+        ///         "arguments" : {
+        ///             "name" : "arguments",
+        ///             "type" : "object",
+        ///             "display" : "{...}",
+        ///             "className" : "Object",
+        ///             "propertyAttributes" : 1,
+        ///             "handle" : 190
+        ///         },
+        ///         "returnValue" : {
+        ///             "name" : "[Return value]",
+        ///             "type" : "undefined",
+        ///             "propertyAttributes" : 0,
+        ///             "handle" : 192
+        ///         },
+        ///         "functionCallsReturn" : [{
+        ///                 "name" : "[foo1 returned]",
+        ///                 "type" : "number",
+        ///                 "value" : 1,
+        ///                 "propertyAttributes" : 2,
+        ///                 "handle" : 191
+        ///             }
+        ///         ],
+        ///         "locals" : [],
+        ///         "scopes" : [{
+        ///                 "index" : 0,
+        ///                 "handle" : 193
+        ///             }
+        ///         ],
+        ///         "globals" : {
+        ///             "handle" : 194
+        ///         }
+        ///     }
+        ///     </para>
+        /// </remarks>
+        /// <returns>
+        ///     The code <c>JsNoError</c> if the operation succeeded, a failure code otherwise.
+        /// </returns>
+        /// <remarks>
+        ///     The current runtime should be in debug state. This API can only be called when runtime is at a break.
+        /// </remarks>
+        [DllImport(DllName)]
+        internal static extern JsErrorCode JsDiagGetStackProperties(uint stackFrameIndex, out JsValue properties);
+
+
         // TODO:
         // https://github.com/Microsoft/ChakraCore/issues/4324
 

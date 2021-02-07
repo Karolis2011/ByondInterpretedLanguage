@@ -92,6 +92,8 @@ namespace ByondLang.ChakraCore
             finishedCallbacks.AddLast(action);
         }
 
+        public virtual void OnBreak() { }
+        public virtual void OnResume() { }
 
         public bool Wait(TimeSpan timeout) => SpinWait.SpinUntil(() => IsCompleted, timeout);
         public void Wait() => SpinWait.SpinUntil(() => IsCompleted);
@@ -104,7 +106,7 @@ namespace ByondLang.ChakraCore
         Delegate m_action;
         TResult result = default;
         
-        public JsTask(Func<TResult> function, JsTaskPriority priority = JsTaskPriority.LOWEST, BaseProgram program = null)
+        public JsTask(Func<TResult> function, JsTaskPriority priority = JsTaskPriority.LOWEST)
         {
             m_action = function;
             Priority = priority;

@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using ByondLang.Interface;
 using ByondLang.Models;
-using ByondLang.Models.Request;
 using ByondLang.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -32,7 +33,15 @@ namespace ByondLang.Controllers
         [HttpGet("/new_program")]
         public int NewProgram([FromQuery] ProgramType type)
         {
-            return _newService.NewProgram(PTypeToPType(type));
+            switch (type)
+            {
+                case ProgramType.Computer:
+                    return _newService.NewProgram((s) => new ComputerProgram(s));
+                case ProgramType.TCom:
+                    throw new NotImplementedException();
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         [HttpGet("/execute")]
@@ -50,22 +59,41 @@ namespace ByondLang.Controllers
         }
 
 
-        
+
         [HttpGet("/computer/get_buffer")]
-        public async Task<string> GetBuffer([FromQuery] int id)
+        public string GetBuffer([FromQuery] int id)
         {
-            return await _newService.GetProgram(id).GetBuffer();
+            return _newService.GetProgram<ComputerProgram>(id).GetTerminalBuffer();
         }
 
         [HttpGet("/computer/topic")]
-        public async Task<int> TopicCall([FromQuery] int id, [FromQuery] string topic = "", [FromQuery] string data = "")
+        public int TopicCall([FromQuery] int id, [FromQuery] string topic = "", [FromQuery] string data = "")
         {
-            var program = _newService.GetProgram(id);
-            await program.HandleTopic(topic, data);
+            var program = _newService.GetProgram<ComputerProgram>(id);
+            program.HandleTopic(topic, data);
             return 1;
         }
 
+        [HttpGet("/debug/set")]
+        public int DebugSet([FromQuery] int id, [FromQuery] int state)
+        {
+            var program = _newService.GetProgram(id);
+            program.SetDebuggingState(Convert.ToBoolean(state));
+            return 1;
+        }
 
+        /// <summary>
+        /// Gets new events sent by 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("/events/get")]
+        public IEnumerable<Event> EventsGet([FromQuery] int id)
+        {
+            var program = _newService.GetProgram(id);
+            program.SetDebuggingState(Convert.ToBoolean(state));
+            return 1;
+        }
 
         /*
 
@@ -89,16 +117,6 @@ namespace ByondLang.Controllers
         {
             Computer,
             TCom
-        }
-
-        private Api.ProgramType PTypeToPType(ProgramType type)
-        {
-            return type switch
-            {
-                ProgramType.Computer => Api.ProgramType.ComputerProgram,
-                ProgramType.TCom => Api.ProgramType.None, // TODO change this
-                _ => Api.ProgramType.None,
-            };
         }
     }
 }

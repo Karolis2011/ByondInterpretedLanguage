@@ -9,14 +9,16 @@ namespace ByondLang.Interface
     public class JsCallback : IDisposable
     {
         public JsValue CallbackFunction;
+        public BaseProgram program;
         public string Id;
         protected bool disposedValue;
 
-        public JsCallback(string id, JsValue callback)
+        public JsCallback(string id, JsValue callback, BaseProgram program)
         {
             CallbackFunction = callback;
             Id = id;
             callback.AddRef();
+            this.program = program;
         }
 
         protected virtual void Dispose(bool disposing)
@@ -27,7 +29,10 @@ namespace ByondLang.Interface
                 {
                     // TODO: dispose managed state (managed objects)
                 }
-                CallbackFunction.Release();
+                program.Function(() =>
+                {
+                    CallbackFunction.Release();
+                }, ChakraCore.JsTaskPriority.INITIALIZATION);
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer
                 // TODO: set large fields to null

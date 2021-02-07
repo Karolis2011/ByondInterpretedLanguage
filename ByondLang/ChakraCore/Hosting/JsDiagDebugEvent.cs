@@ -1,7 +1,7 @@
 ﻿namespace ByondLang.ChakraCore.Hosting
 {
     /// <summary>
-    ///     The type of a typed JavaScript array.
+    ///     Debug events reported from ChakraCore engine.
     /// </summary>
     public enum JsDiagDebugEvent
     {

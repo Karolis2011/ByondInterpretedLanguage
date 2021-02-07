@@ -51,25 +51,20 @@ const to = {
   props: ["to"],
   methods: {
     invoke() {
-      if (programId == null) return;
+      if (this.$root.programId == null) return;
       var topic = this.to;
       var data = "";
       if (this.to[0] == "?") {
         topic = this.to.substring(1);
         data = prompt("Please enter input...", "");
       }
-      $.ajax({
-        type: "GET",
-        url: `/computer/topic`,
-        data: {
-          id: programId,
+      axios.get("/computer/topic", {
+        params: {
+          id: this.$root.programId,
           topic: topic,
           data: data,
-        },
-        success: (data) => {
-          get_buffer();
-        },
-      });
+        }
+      })
     },
   },
   template:
@@ -164,6 +159,22 @@ var app = new Vue({
       })
       .catch(() => {
         this.a('error', 'Failed to update console buffer.')
+      })
+    },
+    set_debugging(state = 1) {
+      axios.get("/debug/set", {
+        params: {
+          id: this.programId,
+          state: state
+        }
+      }).then(r => {
+        if(state)
+          this.a('success', 'Enabled debugging.')
+        else
+          this.a('success', 'Disabled debugging.')
+      })
+      .catch(() => {
+        this.a('error', 'Failed to change debugging state.')
       })
     },
     remove() {

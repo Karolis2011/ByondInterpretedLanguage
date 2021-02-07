@@ -23,6 +23,7 @@ namespace ByondLang.Interface.StateObjects
         [JsMapped]
         public int height { get; private set; } = 20;
         TerminalChar[][] char_array;
+        object char_array_lock = new object();
 
         public Color background = new Color(0, 0, 0);
         public Color foreground = new Color(255, 255, 255);
@@ -75,20 +76,24 @@ namespace ByondLang.Interface.StateObjects
             array.SetIndexedProperty(1, tm.MTS(cursorY));
             return array;
         }
-        [JsCallable]
+        [JsCallable()]
         public void clear()
         {
             cursorX = 0;
             cursorY = 0;
-            char_array = new TerminalChar[height][];
-            for (int y = 0; y < height; y++)
+            lock (char_array_lock)
             {
-                char_array[y] = new TerminalChar[width];
-                for (int x = 0; x < width; x++)
+                char_array = new TerminalChar[height][];
+                for (int y = 0; y < height; y++)
                 {
-                    char_array[y][x] = new TerminalChar(' ', background, foreground);
+                    char_array[y] = new TerminalChar[width];
+                    for (int x = 0; x < width; x++)
+                    {
+                        char_array[y][x] = new TerminalChar(' ', background, foreground);
+                    }
                 }
             }
+            
         }
         [JsCallable]
         public void write(JsValue val)
@@ -141,7 +146,7 @@ namespace ByondLang.Interface.StateObjects
                 }
                 else
                 {
-                    lock (char_array)
+                    lock (char_array_lock)
                     {
                         char_array[cursorY][cursorX] = new TerminalChar(c, background, foreground, topic, prompt);
                     }
@@ -187,7 +192,7 @@ namespace ByondLang.Interface.StateObjects
         public string Stringify()
         {
             StringBuilder o = new StringBuilder();
-            lock (char_array)
+            lock (char_array_lock)
             {
                 for (int y = 0; y < char_array.Length; y++)
                 {
@@ -282,15 +287,18 @@ namespace ByondLang.Interface.StateObjects
             cursorY++;
             if (cursorY >= height)
             {
-                cursorY--;
-                for (int i = 0; i < height - 1; i++)
+                lock (char_array_lock)
                 {
-                    char_array[i] = char_array[i + 1];
-                }
-                char_array[height - 1] = new TerminalChar[width];
-                for (int x = 0; x < width; x++)
-                {
-                    char_array[height - 1][x] = new TerminalChar(' ', background, foreground);
+                    cursorY--;
+                    for (int i = 0; i < height - 1; i++)
+                    {
+                        char_array[i] = char_array[i + 1];
+                    }
+                    char_array[height - 1] = new TerminalChar[width];
+                    for (int x = 0; x < width; x++)
+                    {
+                        char_array[height - 1][x] = new TerminalChar(' ', background, foreground);
+                    }
                 }
             }
         }
@@ -298,12 +306,15 @@ namespace ByondLang.Interface.StateObjects
 
         private void SetTopic(int x, int y, JsCallback callback, bool prompt)
         {
-            if (y >= 0 && x >= 0 && x < width && y < height)
+            lock (char_array_lock)
             {
-                char_array[y][x].callback = callback;
-                char_array[y][x].prompt = prompt;
-
+                if (y >= 0 && x >= 0 && x < width && y < height)
+                {
+                    char_array[y][x].callback = callback;
+                    char_array[y][x].prompt = prompt;
+                }
             }
+            
         }
 
         internal void PrintException(Exception ex)

@@ -920,7 +920,7 @@ namespace ByondLang.ChakraCore.Hosting
 
             if (arguments.Length > ushort.MaxValue)
             {
-                throw new ArgumentOutOfRangeException("arguments");
+                throw new ArgumentOutOfRangeException(nameof(arguments));
             }
 
             Native.ThrowIfError(Native.JsCallFunction(this, arguments, (ushort)arguments.Length, out JsValue returnReference));
@@ -939,7 +939,7 @@ namespace ByondLang.ChakraCore.Hosting
         {
             if (arguments.Length > ushort.MaxValue)
             {
-                throw new ArgumentOutOfRangeException("arguments");
+                throw new ArgumentOutOfRangeException(nameof(arguments));
             }
             Native.ThrowIfError(Native.JsConstructObject(this, arguments, (ushort)arguments.Length, out JsValue returnReference));
             return returnReference;

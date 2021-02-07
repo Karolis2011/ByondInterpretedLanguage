@@ -28,8 +28,7 @@ namespace ByondLang.Interface
             if (!callbacks.ContainsKey(hash))
                 throw new Exception("Unknown callback.");
             var weakCallback = callbacks[hash];
-            JsCallback callback;
-            if (weakCallback.TryGetTarget(out callback))
+            if (weakCallback.TryGetTarget(out JsCallback callback))
             {
                 TimedFunction(() =>
                 {
@@ -44,8 +43,7 @@ namespace ByondLang.Interface
 
         internal override bool HandleException(Exception exception)
         {
-            var ex = exception as JsScriptException;
-            if (ex != null)
+            if (exception is JsScriptException ex)
             {
                 terminal.PrintException(ex);
                 return true;

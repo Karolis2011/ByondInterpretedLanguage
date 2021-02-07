@@ -15,7 +15,8 @@ using System.Threading.Tasks;
 
 namespace ByondLang.ChakraCore
 {
-    public class TypeMapper : IDisposable
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0039:Use local function", Justification = "GC issues")]
+	public class TypeMapper : IDisposable
     {
 		/// <summary>
 		/// Name of property to store the external object
@@ -192,16 +193,14 @@ namespace ByondLang.ChakraCore
 
 		private EmbeddedObject CreateEmbeddedObjectOrFunction(object obj)
 		{
-			var del = obj as Delegate;
-			var delArray = obj as Delegate[];
-			if (delArray != null)
-				return CreateEmbeddedFunction(delArray);
-			else if (del != null)
-				return CreateEmbeddedFunction(del);
-			else
-				return CreateEmbeddedObject(obj);
+            if (obj is Delegate[] delArray)
+                return CreateEmbeddedFunction(delArray);
+            else if (obj is Delegate del)
+                return CreateEmbeddedFunction(del);
+            else
+                return CreateEmbeddedObject(obj);
 
-		}
+        }
 
 		private EmbeddedObject CreateEmbeddedObject(object obj)
 		{
@@ -221,7 +220,8 @@ namespace ByondLang.ChakraCore
 			return embeddedObject;
 		}
 
-		private void ProjectFields(EmbeddedItem externalItem, EmbeddingObjectOptions options)
+        
+        private void ProjectFields(EmbeddedItem externalItem, EmbeddingObjectOptions options)
 		{
 			Type type = externalItem.HostType;
 			object obj = externalItem.HostObject;
@@ -256,10 +256,9 @@ namespace ByondLang.ChakraCore
 					catch (Exception e)
 					{
 						Exception exception = UnwrapException(e);
-						var wrapperException = exception as JsException;
-						JsValue errorValue;
+                        JsValue errorValue;
 
-						if (wrapperException != null)
+                        if (exception is JsException wrapperException)
 						{
 							errorValue = CreateErrorFromWrapperException(wrapperException);
 						}
@@ -304,10 +303,9 @@ namespace ByondLang.ChakraCore
 					catch (Exception e)
 					{
 						Exception exception = UnwrapException(e);
-						var wrapperException = exception as JsException;
-						JsValue errorValue;
+                        JsValue errorValue;
 
-						if (wrapperException != null)
+                        if (exception is JsException wrapperException)
 						{
 							errorValue = CreateErrorFromWrapperException(wrapperException);
 						}
@@ -374,10 +372,9 @@ namespace ByondLang.ChakraCore
 						catch (Exception e)
 						{
 							Exception exception = UnwrapException(e);
-							var wrapperException = exception as JsException;
-							JsValue errorValue;
+                            JsValue errorValue;
 
-							if (wrapperException != null)
+                            if (exception is JsException wrapperException)
 							{
 								errorValue = CreateErrorFromWrapperException(wrapperException);
 							}
@@ -427,10 +424,9 @@ namespace ByondLang.ChakraCore
 						catch (Exception e)
 						{
 							Exception exception = UnwrapException(e);
-							var wrapperException = exception as JsException;
-							JsValue errorValue;
+                            JsValue errorValue;
 
-							if (wrapperException != null)
+                            if (exception is JsException wrapperException)
 							{
 								errorValue = CreateErrorFromWrapperException(wrapperException);
 							}
@@ -502,10 +498,9 @@ namespace ByondLang.ChakraCore
 					catch (Exception e)
 					{
 						Exception exception = UnwrapException(e);
-						var wrapperException = exception as JsException;
-						JsValue errorValue;
+                        JsValue errorValue;
 
-						if (wrapperException != null)
+                        if (exception is JsException wrapperException)
 						{
 							errorValue = CreateErrorFromWrapperException(wrapperException);
 						}
@@ -565,12 +560,11 @@ namespace ByondLang.ChakraCore
 				{
 					JsValue undefinedValue = JsValue.Undefined;
 					Exception exception = UnwrapException(e);
-					var wrapperException = exception as JsException;
-					JsValue errorValue = wrapperException != null ?
-						CreateErrorFromWrapperException(wrapperException)
-						:
-						JsValue.CreateError(JsValue.FromString($"Host delegate invocation error: {exception.Message}"));
-					;
+                    JsValue errorValue = exception is JsException wrapperException ?
+                        CreateErrorFromWrapperException(wrapperException)
+                        :
+                        JsValue.CreateError(JsValue.FromString($"Host delegate invocation error: {exception.Message}"));
+                    ;
 					JsContext.SetException(errorValue);
 
 					return undefinedValue;
@@ -613,12 +607,11 @@ namespace ByondLang.ChakraCore
 				{
 					JsValue undefinedValue = JsValue.Undefined;
 					Exception exception = UnwrapException(e);
-					var wrapperException = exception as JsException;
-					JsValue errorValue = wrapperException != null ?
-						CreateErrorFromWrapperException(wrapperException)
-						:
-						JsValue.CreateError(JsValue.FromString($"Host delegate invocation error: {exception.Message}"));
-					;
+                    JsValue errorValue = exception is JsException wrapperException ?
+                        CreateErrorFromWrapperException(wrapperException)
+                        :
+                        JsValue.CreateError(JsValue.FromString($"Host delegate invocation error: {exception.Message}"));
+                    ;
 					JsContext.SetException(errorValue);
 
 					return undefinedValue;
@@ -828,18 +821,17 @@ namespace ByondLang.ChakraCore
 		private static Exception UnwrapException(Exception exception)
 		{
 			Exception originalException = exception;
-			var targetInvocationException = exception as TargetInvocationException;
 
-			if (targetInvocationException != null)
-			{
-				Exception innerException = targetInvocationException.InnerException;
-				if (innerException != null)
-				{
-					originalException = innerException;
-				}
-			}
+            if (exception is TargetInvocationException targetInvocationException)
+            {
+                Exception innerException = targetInvocationException.InnerException;
+                if (innerException != null)
+                {
+                    originalException = innerException;
+                }
+            }
 
-			return originalException;
+            return originalException;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -863,10 +855,9 @@ namespace ByondLang.ChakraCore
 
 		private static JsValue CreateErrorFromWrapperException(JsException exception)
 		{
-			var originalException = exception.InnerException as JsException;
-			JsErrorCode errorCode = originalException != null ?
-				originalException.ErrorCode : JsErrorCode.NoError;
-			var description = Enum.GetName(typeof(JsErrorCode), errorCode);
+            JsErrorCode errorCode = exception.InnerException is JsException originalException ?
+                originalException.ErrorCode : JsErrorCode.NoError;
+            var description = Enum.GetName(typeof(JsErrorCode), errorCode);
 
 			JsValue innerErrorValue = JsValue.CreateError(JsValue.FromString(description));
 			innerErrorValue.SetProperty("description", JsValue.FromString(description), true);

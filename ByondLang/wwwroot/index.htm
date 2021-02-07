@@ -33,52 +33,63 @@
       <v-app>
         <v-main>
           <v-container>
-            <div>
-              <v-alert :type="alert.type">
-                {{ alert.message }}
-              </v-alert>
-              <v-menu offset-y v-if="programType == null">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn color="primary" dark v-bind="attrs" v-on="on">
-                    Create
+            <v-row>
+              <v-col>
+                <div>
+                  <v-alert :type="alert.type">
+                    {{ alert.message }}
+                  </v-alert>
+                  <v-menu offset-y v-if="programType == null">
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn color="primary" dark v-bind="attrs" v-on="on">
+                        Create
+                      </v-btn>
+                    </template>
+                    <v-list>
+                      <v-list-item @click="createProgram('Computer')">
+                        <v-list-item-title>Computer program</v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+                  <template v-else>
+                    <v-btn color="primary" dark @click="set_debugging(1)">
+                      Enable Debugging
+                    </v-btn>
+                    <v-btn color="primary" dark @click="execute()">
+                      Execute
+                    </v-btn>
+                    <v-btn color="red" dark @click="remove()">
+                      Dispose program
+                    </v-btn>
+                    <template v-if="programType == 'Computer'">
+                      <v-btn color="secondary" dark @click="update_console_buffer()">
+                        Update
+                      </v-btn>
+                      
+                    </template>
+                  </template>
+                  <v-btn class="float-right" color="red" dark @click="reset()">
+                    Reset daemon
                   </v-btn>
-                </template>
-                <v-list>
-                  <v-list-item @click="createProgram('Computer')">
-                    <v-list-item-title>Computer program</v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-              <template v-else>
-                <v-btn color="primary" dark @click="execute()">
-                  Execute
-                </v-btn>
-                <v-btn color="red" dark @click="remove()">
-                  Dispose program
-                </v-btn>
-                <template v-if="programType == 'Computer'">
-                  <v-btn color="secondary" dark @click="update_console_buffer()">
-                    Update
-                  </v-btn>
-                  
-                </template>
-              </template>
-              <v-btn class="float-right" color="red" dark @click="reset()">
-                Reset daemon
-              </v-btn>
-              <hr>
-
-              <div>
-                <h3>Options:</h3>
-                <template v-if="programType == 'Computer'">
-                  <v-checkbox v-model="console_buffer_auto_update" label="Auto update console buffer"></v-checkbox>
-                </template>
-              </div>
-            </div>
-
-            <editor class="mt-2" v-if="programType != null" v-model="script"></editor>
-            <hr>
-            <component class="mt-2" v-if="console_buffer != null" :is="term"/>
+                  <hr>
+    
+                  <div>
+                    <h3>Options:</h3>
+                    <template v-if="programType == 'Computer'">
+                      <v-checkbox v-model="console_buffer_auto_update" label="Auto update console buffer"></v-checkbox>
+                    </template>
+                  </div>
+                </div>
+    
+                <editor class="mt-2" v-if="programType != null" v-model="script"></editor>
+                <hr>
+                <component class="mt-2" v-if="console_buffer != null" :is="term"/>
+              </v-col>
+              <v-col cols="3">
+                Events go here
+              </v-col>
+            </v-row>
+            
           </v-container>
         </v-main>
       </v-app>

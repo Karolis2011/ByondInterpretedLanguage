@@ -52,5 +52,29 @@ namespace ByondLang.UnitTests.StateTests
             Assert.False(flag2); // And we expect task2 to not have finished yeat.
 
         }
+
+        [Fact]
+        public void BreakState()
+        {
+            var s = new JsPFIFOScheduler();
+            bool flag1 = false;
+            bool flag2 = false;
+            bool flag3 = false;
+            var task1 = s.Run(() => { s.EnterBreakState(); flag1 = true; });
+            var task2 = s.Run(() => { flag3 = true; });
+            var task3 = s.RunDebug(() => { flag2 = true; });
+            task3.Wait();
+            Assert.False(flag1);
+            Assert.True(flag2);
+            Assert.False(flag3);
+            Assert.False(task1.IsCompleted);
+            Assert.False(task2.IsCompleted);
+            var task4 = s.RunDebug(() => { s.ExitBreakState(); });
+            task4.Wait();
+            task1.Wait();
+            Assert.True(flag1);
+            Assert.True(flag2);
+            Assert.True(flag3);
+        }
     }
 }
